@@ -2,7 +2,7 @@
 
 # Summer-Ray-Tracer
 
-> SJTU ACM Honors Class 2025 Ray Tracer Project with Rust!
+> SJTU ACM Honors Class 2026 Ray Tracer Project with Rust!
 
 **Before you start, please read this README carefully**, and there is no useless information in this document.
 
@@ -17,6 +17,8 @@ Our project is based on the [***Ray Tracing In One Weekend***](https://raytracin
 Most of your jobs are just reading and trying to understand the books, and implementing the books' C++ code in Rust. (That sounds so easy, right?)
 
 ### Quick Start
+
+> If you are already familiar with Rust, you can dive directly into the [Quick Start](#quick-start) section below. Otherwise, we recommend reading the [Rust Language](#rust-language) section first to get started.
 
 #### Rust Installation
 Rust is a modern programming language with a convenient version control tool called `rustup` and a powerful package manager called `cargo`. Simply follow the instructions on [Rust official website](https://www.rust-lang.org/tools/install) for their installation. You may also use Rust IDEs (we recommend [RustRover](https://www.jetbrains.com/rust/)) to manage your Rust projects.
@@ -51,6 +53,8 @@ git push origin your_tag_name  # Push the tag to GitHub
 git push origin main  --follow-tags  # Push the main branch and all tags to GitHub
 git push origin --tags  # Push all tags to GitHub, if you pushed the code without tags before
 ```
+
+**Tag naming convention:** We recommend using the format `book<book#>-image<image#>`, e.g., `book1-image1`, `book1-image2`, `book2-image3`. For final scene or bonus work, you may use tags like `final-scene`, `bonus-rendering`, etc. Avoid reusing tags that already exist in the repository (run `git tag` to check).
 
 ### The Framework of the Project
 ```
@@ -125,17 +129,17 @@ Just do some preparation work, including:
     - Chapter 10, 15, 16... the more, the better
     - Maybe at first you just know how to write a `Hello World` program or how to output the first image in the book, as long as you can complete the current task, it is enough
 
-#### Task 1 (20 pts): *Ray Tracing In One Weekend*
+#### Task 1 (30 pts): *Ray Tracing In One Weekend*
 
 - Complete [the first book](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
 - Save each output image in the `output` folder
 
-#### Task 2 (20 pts) : *Ray Tracing: The Next Week*
+#### Task 2 (30 pts) : *Ray Tracing: The Next Week*
 
 - Complete [the second book](https://raytracing.github.io/books/RayTracingTheNextWeek.html)
 - Save each output image in the `output` folder
 
-#### Task 3 (40 pts): Advanced features
+#### Task 3 (20 pts): Advanced features
 - We divide suggested advanced features for your ray tracer into four parts: [rendering](./doc/rendering-bonus.md), [geometry](./doc/geometry-bonus.md), [animation](./doc/animation-bonus.md), and [optimization](./doc/optimization-bonus.md).
 - The points given are just a reference. Final points will be given based on the workload as well as the quality of your work. (We use a question mark to indicate that the points are not fixed.)
 - Please contact TAs if you have any ideas about some other interesting features that you want to implement.
@@ -163,17 +167,19 @@ Just do some preparation work, including:
   - `cargo build --release --all-features`
   - `cargo run --release`
 - You may run these commands locally to check your code before pushing it to GitHub.
+- **Do not modify any files under `.github/workflows/` without permission from the TAs.** In particular, you are not allowed to weaken or remove `-D warnings` from the clippy check, or change any other CI checks to make your code pass.
 #### Task 3
 - You should have a document recording all the bonus you have done briefly. For each bonus, you should show the code or a benchmark of your work.
 
 ### Timeline
+- **Note:** "Day" in the schedule below refers to working days (Monday to Friday). Day 1 is the Monday of the first week, and the deadline is the Thursday of the third week, 23:59.
 - Recommended schedule:
   - **Day 1 - 2:**  Task 0: Environment setup & Learn Rust
   - **Day 3 - 5:** Task 1
   - **Day 6 - 8:** Task 2
-  - **Day 9 - 19:** Task 3 & Final Scene
-  - **Day 20:** Presentation & Code Review
-- **Deadline: 2025-07-17 23:59:59**
+  - **Day 9 - 14:** Task 3 & Final Scene
+  - **Day 15:** Presentation & Code Review
+- **Deadline: 2026-07-23 23:59:59**
 
 ### More Tips
 - You may run `cargo fmt` to format your code locally before pushing it to GitHub.
