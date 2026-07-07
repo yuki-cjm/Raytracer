@@ -1,12 +1,12 @@
-mod vec3;
 mod color;
+mod vec3;
 
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 
-use crate::vec3::Vec3;
 use crate::color::{Color, get_color};
+use crate::vec3::Vec3;
 
 fn main() {
     let path = std::path::Path::new("output/book1/image1.png");

@@ -11,6 +11,6 @@ pub fn get_color(pixel_color: &Color) -> [u8; 3] {
     let rbyte = (255.999 * r) as u8;
     let gbyte = (255.999 * g) as u8;
     let bbyte = (255.999 * b) as u8;
-    
+
     [rbyte, gbyte, bbyte]
 }
