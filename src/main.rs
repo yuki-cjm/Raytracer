@@ -1,6 +1,6 @@
 mod color;
-mod vec3;
 mod ray;
+mod vec3;
 
 use console::style;
 use image::{ImageBuffer, RgbImage};
@@ -63,7 +63,8 @@ fn main() {
 
     // Calculate the location of the upper left pixel.
 
-    let viewport_upper_left = camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+    let viewport_upper_left =
+        camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
     // Render
@@ -71,7 +72,8 @@ fn main() {
     for j in 0..image_height {
         for i in 0..image_width {
             let pixel = img.get_pixel_mut(i, j);
-            let pixel_center = pixel00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
+            let pixel_center =
+                pixel00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
             let ray_direction = pixel_center - camera_center;
             let r = Ray::new(&camera_center, &ray_direction);
             let pixel_color = ray_color(&r);

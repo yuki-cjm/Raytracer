@@ -13,7 +13,7 @@ impl Ray {
             dir: *direction,
         }
     }
-    
+
     #[allow(dead_code)]
     pub fn at(&self, t: f64) -> Point3 {
         self.orig + self.dir * t
