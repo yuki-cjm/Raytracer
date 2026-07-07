@@ -6,7 +6,7 @@ use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 
 use crate::color::{Color, get_color};
-use crate::vec3::Vec3;
+// use crate::vec3::Vec3;
 
 fn main() {
     let path = std::path::Path::new("output/book1/image1.png");
