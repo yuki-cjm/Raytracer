@@ -1,5 +1,9 @@
 mod color;
+mod hittable;
+mod hittable_list;
 mod ray;
+mod rtweekend;
+mod sphere;
 mod vec3;
 
 use console::style;
@@ -7,28 +11,18 @@ use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 
 use crate::color::{Color, get_color};
+use crate::hittable::HitRecord;
+use crate::hittable::Hittable;
+use crate::hittable_list::HittableList;
 use crate::ray::Ray;
+use crate::rtweekend::INFINITY;
+use crate::sphere::Sphere;
 use crate::vec3::{Point3, Vec3};
 
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
-    let oc = *center - r.orig;
-    let a = Vec3::dot(&r.dir, &r.dir);
-    let b = -2.0 * Vec3::dot(&r.dir, &oc);
-    let c = Vec3::dot(&oc, &oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-
-    if discriminant < 0.0 {
-        -1.0
-    } else {
-        (-b - discriminant.sqrt()) / (2.0 * a)
-    }
-}
-
-fn ray_color(r: &Ray) -> Color {
-    let t = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, r);
-    if t > 0.0 {
-        let n = Vec3::unit_vector(&(r.at(t) - Vec3::new(0.0, 0.0, -1.0)));
-        return 0.5 * Color::new(n.x + 1.0, n.y + 1.0, n.z + 1.0);
+fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+    let mut rec = HitRecord::default();
+    if world.hit(r, 0.0, INFINITY, &mut rec) {
+        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
     }
 
     let unit_direction = r.dir.unit_vector();
@@ -64,6 +58,16 @@ fn main() {
         ProgressBar::new((image_height * image_width) as u64)
     };
 
+    // World
+
+    let mut world = HittableList::new();
+
+    world.add(Box::new(Sphere::new(&Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(
+        &Point3::new(0.0, -100.5, -1.0),
+        100.0,
+    )));
+
     // Camera
 
     let focal_length = 1.0;
@@ -96,7 +100,8 @@ fn main() {
                 pixel00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
             let ray_direction = pixel_center - camera_center;
             let r = Ray::new(&camera_center, &ray_direction);
-            let pixel_color = ray_color(&r);
+
+            let pixel_color = ray_color(&r, &world as &dyn Hittable);
             *pixel = image::Rgb(get_color(&pixel_color));
         }
         progress.inc(1);
