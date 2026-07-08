@@ -51,7 +51,7 @@ impl Camera {
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v); // Location of pixel 0, 0
 
         // output
-        let path = std::path::Path::new("../output/book1/image1.png");
+        let path = std::path::Path::new("output/book1/image1.png");
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -72,7 +72,7 @@ impl Camera {
                         self.get_ray(i, j, &center, &pixel00_loc, &pixel_delta_u, &pixel_delta_v);
                     pixel_color += Self::ray_color(&r, world);
                 }
-                pixel_color = pixel_color * pixel_samples_scale;
+                pixel_color *= pixel_samples_scale;
                 *pixel = image::Rgb(get_color(&pixel_color));
             }
             progress.inc(1);
