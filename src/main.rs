@@ -22,6 +22,6 @@ fn main() {
         100.0,
     )));
 
-    let cam = Camera::new(16.0 / 9.0, 400u32);
+    let cam = Camera::new(16.0 / 9.0, 400u32, 100);
     cam.render(&world);
 }
