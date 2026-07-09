@@ -12,7 +12,6 @@ pub fn random_double() -> f64 {
     rand::random()
 }
 
-#[allow(dead_code)]
 pub fn random_range(min: f64, max: f64) -> f64 {
     // Returns a random real in [min,max).
     min + (max - min) * random_double()

@@ -24,7 +24,7 @@ jobs:
     name: Build and Upload
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4
         name: Checkout 🛎️
       - uses: dtolnay/rust-toolchain@stable
         name: Setup Cargo Toolchain 🛎️
@@ -32,7 +32,7 @@ jobs:
         run: cargo build --release --all-features
       - name: Run 🔧
         run: cargo run --release
-      - uses: actions/upload-artifact@v4.6.2
+      - uses: actions/upload-artifact@v4
         name: Upload Artifacts 🚀
         with:
           name: output

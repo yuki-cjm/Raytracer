@@ -1,3 +1,5 @@
+use crate::rtweekend::{random_double, random_range};
+
 #[derive(Default, Debug, Clone, Copy)]
 pub struct Vec3 {
     pub x: f64,
@@ -36,6 +38,18 @@ impl Vec3 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
+    pub fn random_vec3() -> Self {
+        Vec3::new(random_double(), random_double(), random_double())
+    }
+
+    pub fn random_vec3_range(min: f64, max: f64) -> Self {
+        Vec3::new(
+            random_range(min, max),
+            random_range(min, max),
+            random_range(min, max),
+        )
+    }
+
     pub fn dot(&self, other: &Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
@@ -56,6 +70,29 @@ impl Vec3 {
             z: self.z / length,
         }
     }
+
+    pub fn random_unit_vector() -> Self {
+        loop {
+            let p = Self::random_vec3_range(-1.0, 1.0);
+            let lensq = p.length_squared();
+            if 1e-160 < lensq && lensq <= 1.0 {
+                return p / lensq.sqrt();
+            }
+        }
+    }
+
+    pub fn random_on_hemisphere(normal: &Vec3) -> Self {
+        let on_unit_sphere = Self::random_unit_vector();
+        if dot(&on_unit_sphere, normal) > 0.0 {
+            on_unit_sphere // In the same hemisphere as the normal
+        } else {
+            -on_unit_sphere
+        }
+    }
+}
+
+pub fn dot(v1: &Vec3, v2: &Vec3) -> f64 {
+    v1.dot(v2)
 }
 
 use std::ops;
@@ -97,6 +134,18 @@ impl ops::SubAssign for Vec3 {
         self.x -= other.x;
         self.y -= other.y;
         self.z -= other.z;
+    }
+}
+
+impl ops::Neg for Vec3 {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
     }
 }
 
