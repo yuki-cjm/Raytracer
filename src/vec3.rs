@@ -38,6 +38,12 @@ impl Vec3 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
+    pub fn near_zero(&self) -> bool {
+        // Return true if the vector is close to zero in all dimensions.
+        let s = 1e-8;
+        self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
+    }
+
     pub fn random_vec3() -> Self {
         Vec3::new(random_double(), random_double(), random_double())
     }
@@ -93,6 +99,10 @@ impl Vec3 {
 
 pub fn dot(v1: &Vec3, v2: &Vec3) -> f64 {
     v1.dot(v2)
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    *v - 2.0 * dot(v, n) * *n
 }
 
 use std::ops;
@@ -157,6 +167,18 @@ impl ops::Mul<f64> for Vec3 {
             x: self.x * t,
             y: self.y * t,
             z: self.z * t,
+        }
+    }
+}
+
+impl ops::Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, other: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x * other.x,
+            y: self.y * other.y,
+            z: self.z * other.z,
         }
     }
 }
