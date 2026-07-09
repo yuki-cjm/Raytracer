@@ -13,14 +13,21 @@ pub struct Camera {
     pub aspect_ratio: f64,      // Ratio of image width over height
     pub image_width: u32,       // Rendered image width in pixel count
     pub samples_per_pixel: u32, // Count of random samples for each pixel
+    pub max_depth: i32,         // Maximum number of ray bounces into scene
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: u32,
+        samples_per_pixel: u32,
+        max_depth: i32,
+    ) -> Self {
         Self {
             aspect_ratio,
             image_width,
             samples_per_pixel,
+            max_depth,
         }
     }
 
@@ -70,7 +77,7 @@ impl Camera {
                 for _sample in 0..self.samples_per_pixel {
                     let r =
                         self.get_ray(i, j, &center, &pixel00_loc, &pixel_delta_u, &pixel_delta_v);
-                    pixel_color += Self::ray_color(&r, world);
+                    pixel_color += Self::ray_color(&r, self.max_depth, world);
                 }
                 pixel_color *= pixel_samples_scale;
                 *pixel = image::Rgb(get_color(&pixel_color));
@@ -114,12 +121,17 @@ impl Camera {
         Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
     }
 
-    fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+    fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+        // If we've exceeded the ray bounce limit, no more light is gathered.
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+
         let mut rec = HitRecord::default();
 
         if world.hit(r, &Interval::new(0.0, INFINITY), &mut rec) {
             let direction = Vec3::random_on_hemisphere(&rec.normal);
-            return 0.5 * Self::ray_color(&Ray::new(&rec.p, &direction), world);
+            return 0.5 * Self::ray_color(&Ray::new(&rec.p, &direction), depth - 1, world);
         }
 
         let unit_direction = r.dir.unit_vector();
