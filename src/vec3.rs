@@ -101,6 +101,10 @@ pub fn dot(v1: &Vec3, v2: &Vec3) -> f64 {
     v1.dot(v2)
 }
 
+pub fn cross(v1: &Vec3, v2: &Vec3) -> Vec3 {
+    v1.cross(v2)
+}
+
 pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
     *v - 2.0 * dot(v, n) * *n
 }
