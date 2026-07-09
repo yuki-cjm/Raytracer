@@ -2,7 +2,7 @@ use crate::color::{Color, get_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::rtweekend::{INFINITY, random_double};
+use crate::rtweekend::{INFINITY, degrees_to_radians, random_double};
 use crate::vec3::{Point3, Vec3};
 
 use console::style;
@@ -11,19 +11,23 @@ use indicatif::ProgressBar;
 
 #[allow(dead_code)]
 pub struct Camera {
+    // Image
     pub aspect_ratio: f64,        // Ratio of image width over height
+    pub image_height: u32,        // Rendered image height in pixel count
     pub image_width: u32,         // Rendered image width in pixel count
     pub samples_per_pixel: u32,   // Count of random samples for each pixel
     pub max_depth: i32,           // Maximum number of ray bounces into scene
-    pub image_height: u32,        // Rendered image height in pixel count
     pub pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
-    pub center: Point3,           // Camera center position
-    pub focal_length: f64,        // Distance from camera center to viewport
-    pub viewport_height: f64,     // Height of the image viewport
-    pub viewport_width: f64,      // Width of the image viewport
-    pub pixel_delta_u: Vec3,      // Horizontal offset between pixels
-    pub pixel_delta_v: Vec3,      // Vertical offset between pixels
-    pub pixel00_loc: Point3,      // Location of the upper left pixel
+
+    // Camera
+    pub center: Point3,       // Camera center position
+    pub focal_length: f64,    // Distance from camera center to viewport
+    pub viewport_height: f64, // Height of the image viewport
+    pub viewport_width: f64,  // Width of the image viewport
+    pub pixel_delta_u: Vec3,  // Horizontal offset between pixels
+    pub pixel_delta_v: Vec3,  // Vertical offset between pixels
+    pub pixel00_loc: Point3,  // Location of the upper left pixel
+    pub vfov: f64,            // Vertical view angle (field of view)
 }
 
 impl Camera {
@@ -32,6 +36,7 @@ impl Camera {
         image_width: u32,
         samples_per_pixel: u32,
         max_depth: i32,
+        vfov: f64,
     ) -> Self {
         let image_height = ((image_width as f64) / aspect_ratio) as u32;
         let image_height = image_height.max(1);
@@ -42,7 +47,9 @@ impl Camera {
 
         // Determine viewport dimensions.
         let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let theta = degrees_to_radians(vfov);
+        let h = f64::tan(theta / 2.0);
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -72,6 +79,7 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             pixel00_loc,
+            vfov,
         }
     }
 
