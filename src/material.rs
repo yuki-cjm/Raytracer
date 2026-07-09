@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
-use crate::vec3::{Vec3, reflect, refract};
+use crate::vec3::{Vec3, dot, reflect, refract};
 
 pub trait Material {
     fn scatter(
@@ -103,9 +103,17 @@ impl Material for Dielectric {
         };
 
         let unit_direction = r_in.dir.unit_vector();
-        let refracted = refract(&unit_direction, &rec.normal, ri);
+        let cos_theta = f64::min(dot(&unit_direction.neg(), &rec.normal), 1.0);
+        let sin_theta = f64::sqrt(1.0 - cos_theta * cos_theta);
 
-        *scattered = Ray::new(&rec.p, &refracted);
+        let cannot_refract = ri * sin_theta > 1.0;
+        let direction = if cannot_refract {
+            reflect(&unit_direction, &rec.normal)
+        } else {
+            refract(&unit_direction, &rec.normal, ri)
+        };
+
+        *scattered = Ray::new(&rec.p, &direction);
         true
     }
 }
