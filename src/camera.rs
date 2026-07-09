@@ -21,7 +21,6 @@ pub struct Camera {
 
     // Camera
     center: Point3,       // Camera center position
-    focal_length: f64,    // Distance from camera center to viewport
     viewport_height: f64, // Height of the image viewport
     viewport_width: f64,  // Width of the image viewport
     pixel_delta_u: Vec3,  // Horizontal offset between pixels
@@ -36,6 +35,12 @@ pub struct Camera {
     u: Vec3,
     v: Vec3,
     w: Vec3,
+
+    // Defocus disk
+    defocus_angle: f64,   // Variation angle of rays through each pixel
+    focus_dist: f64,      // Distance from camera lookfrom point to plane of perfect focus
+    defocus_disk_u: Vec3, // Defocus disk horizontal radius
+    defocus_disk_v: Vec3, // Defocus disk vertical radius
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -49,6 +54,8 @@ impl Camera {
         lookfrom: &Point3,
         lookat: &Point3,
         vup: &Vec3,
+        defocus_angle: f64,
+        focus_dist: f64,
     ) -> Self {
         let image_height = ((image_width as f64) / aspect_ratio) as u32;
         let image_height = image_height.max(1);
@@ -58,10 +65,9 @@ impl Camera {
         let center = *lookfrom;
 
         // Determine viewport dimensions.
-        let focal_length = (*lookfrom - *lookat).length();
         let theta = degrees_to_radians(vfov);
         let h = f64::tan(theta / 2.0);
-        let viewport_height = 2.0 * h * focal_length;
+        let viewport_height = 2.0 * h * focus_dist;
         let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
 
         // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
@@ -78,8 +84,13 @@ impl Camera {
         let pixel_delta_v = viewport_v / image_height as f64;
 
         // Calculate the location of the upper left pixel.
-        let viewport_upper_left = center - (focal_length * w) - viewport_u / 2.0 - viewport_v / 2.0;
+        let viewport_upper_left = center - (focus_dist * w) - viewport_u / 2.0 - viewport_v / 2.0;
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+        // Calculate the camera defocus disk basis vectors.
+        let defocus_radius = focus_dist * (degrees_to_radians(defocus_angle / 2.0)).tan();
+        let defocus_disk_u = u * defocus_radius;
+        let defocus_disk_v = v * defocus_radius;
 
         Self {
             aspect_ratio,
@@ -89,7 +100,6 @@ impl Camera {
             image_height,
             pixel_samples_scale,
             center,
-            focal_length,
             viewport_height,
             viewport_width,
             pixel_delta_u,
@@ -102,6 +112,10 @@ impl Camera {
             u,
             v,
             w,
+            defocus_angle,
+            focus_dist,
+            defocus_disk_u,
+            defocus_disk_v,
         }
     }
 
@@ -142,15 +156,19 @@ impl Camera {
     }
 
     fn get_ray(&self, i: u32, j: u32) -> Ray {
-        // Construct a camera ray originating from the origin and directed at randomly sampled
-        // point around the pixel location i, j.
+        // Construct a camera ray originating from the defocus disk and directed at a randomly
+        // sampled point around the pixel location i, j.
 
         let offset = Self::sample_square();
         let pixel_sample = self.pixel00_loc
             + ((i as f64 + offset.x) * self.pixel_delta_u)
             + ((j as f64 + offset.y) * self.pixel_delta_v);
 
-        let ray_origin = self.center;
+        let ray_origin = if self.defocus_angle <= 0.0 {
+            self.center
+        } else {
+            self.defocus_disk_sample()
+        };
         let ray_direction = pixel_sample - ray_origin;
 
         Ray::new(&ray_origin, &ray_direction)
@@ -159,6 +177,12 @@ impl Camera {
     fn sample_square() -> Vec3 {
         // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
         Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
+    }
+
+    fn defocus_disk_sample(&self) -> Point3 {
+        // Returns a random point in the camera defocus disk.
+        let p = Vec3::random_in_unit_disk();
+        self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
     }
 
     fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
