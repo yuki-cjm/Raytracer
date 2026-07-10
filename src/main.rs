@@ -9,6 +9,7 @@ mod material;
 mod ray;
 mod rtweekend;
 mod sphere;
+mod texture;
 mod vec3;
 
 use std::rc::Rc;
@@ -22,17 +23,22 @@ use crate::material::{Dielectric, Lambertian, Metal};
 #[allow(unused_imports)]
 use crate::rtweekend::{PI, random_double, random_range};
 use crate::sphere::Sphere;
+use crate::texture::CheckerTexture;
 #[allow(unused_imports)]
 use crate::vec3::{Point3, Vec3};
 
 fn main() {
     let mut world = HittableList::new();
 
-    let ground_material = Rc::new(Lambertian::new(&Color::new(0.5, 0.5, 0.5)));
+    let checker = Rc::new(CheckerTexture::from_colors(
+        0.32,
+        &Color::new(0.2, 0.3, 0.1),
+        &Color::new(0.9, 0.9, 0.9),
+    ));
     world.add(Rc::new(Sphere::new_stationary(
         &Point3::new(0.0, -1000.0, 0.0),
         1000.0,
-        ground_material,
+        Rc::new(Lambertian::new(checker)),
     )));
 
     for a in -11..11 {
@@ -48,7 +54,7 @@ fn main() {
                 if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random_vec3() * Color::random_vec3();
-                    let sphere_material = Rc::new(Lambertian::new(&albedo));
+                    let sphere_material = Rc::new(Lambertian::from_color(&albedo));
                     let center2 = center + Vec3::new(0.0, random_range(0.0, 0.5), 0.0);
                     world.add(Rc::new(Sphere::new_moving(
                         &center,
@@ -86,7 +92,7 @@ fn main() {
         material1,
     )));
 
-    let material2 = Rc::new(Lambertian::new(&Color::new(0.4, 0.2, 0.1)));
+    let material2 = Rc::new(Lambertian::from_color(&Color::new(0.4, 0.2, 0.1)));
     world.add(Rc::new(Sphere::new_stationary(
         &Point3::new(-4.0, 1.0, 0.0),
         1.0,

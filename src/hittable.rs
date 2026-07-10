@@ -12,6 +12,8 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub mat: Rc<dyn Material>,
     pub t: f64,
+    pub u: f64,
+    pub v: f64,
     pub front_face: bool,
 }
 
@@ -22,6 +24,8 @@ impl Clone for HitRecord {
             normal: self.normal,
             mat: Rc::clone(&self.mat),
             t: self.t,
+            u: f64::default(),
+            v: f64::default(),
             front_face: self.front_face,
         }
     }
@@ -38,8 +42,10 @@ impl HitRecord {
         Self {
             p: Point3::new(0.0, 0.0, 0.0),
             normal: Vec3::new(0.0, 0.0, 0.0),
-            mat: Rc::new(Lambertian::new(&Color::new(0.0, 0.0, 0.0))),
+            mat: Rc::new(Lambertian::from_color(&Color::new(0.0, 0.0, 0.0))),
             t: 0.0,
+            u: f64::default(),
+            v: f64::default(),
             front_face: false,
         }
     }
