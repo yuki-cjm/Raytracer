@@ -6,7 +6,6 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::rtweekend::random_int;
 
 pub struct BvhNode {
     left: Rc<dyn Hittable>,
@@ -21,7 +20,13 @@ impl BvhNode {
     }
 
     pub fn build(objects: &mut Vec<Rc<dyn Hittable>>, start: usize, end: usize) -> Self {
-        let axis = random_int(0, 2);
+        // Build the bounding box of the span of source objects.
+        let mut bbox = Aabb::EMPTY;
+        for obj in &objects[start..end] {
+            bbox = Aabb::new_from_boxs(&bbox, &obj.bounding_box());
+        }
+
+        let axis = bbox.longest_axis();
 
         let comparator = match axis {
             0 => box_x_compare,
@@ -36,25 +41,19 @@ impl BvhNode {
         } else if object_span == 2 {
             (objects[start].clone(), objects[start + 1].clone())
         } else {
-            objects[start..end].sort_by(
-                |arg0: &Rc<(dyn Hittable + 'static)>, arg1: &Rc<(dyn Hittable + 'static)>| {
-                    if comparator(arg0.clone(), arg1.clone()) {
-                        Ordering::Less
-                    } else {
-                        Ordering::Greater
-                    }
-                },
-            );
+            objects[start..end].sort_by(|arg0: &Rc<(dyn Hittable)>, arg1: &Rc<(dyn Hittable)>| {
+                if comparator(arg0.clone(), arg1.clone()) {
+                    Ordering::Less
+                } else {
+                    Ordering::Greater
+                }
+            });
 
             let mid = start + object_span / 2;
             let left = Rc::new(Self::build(objects, start, mid));
             let right = Rc::new(Self::build(objects, mid, end));
             (left as Rc<dyn Hittable>, right as Rc<dyn Hittable>)
         };
-
-        let box_left = left.bounding_box();
-        let box_right = right.bounding_box();
-        let bbox = Aabb::new_from_boxs(&box_left, &box_right);
 
         Self { left, right, bbox }
     }

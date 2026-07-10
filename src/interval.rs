@@ -57,9 +57,7 @@ impl Interval {
             max: self.max + padding,
         }
     }
-}
 
-#[allow(dead_code)]
-const EMPTY: Interval = Interval::new(INFINITY, -INFINITY);
-#[allow(dead_code)]
-const UNIVERSE: Interval = Interval::new(-INFINITY, INFINITY);
+    pub const EMPTY: Interval = Interval::new(INFINITY, -INFINITY);
+    pub const UNIVERSE: Interval = Interval::new(-INFINITY, INFINITY);
+}

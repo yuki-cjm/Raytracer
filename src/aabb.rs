@@ -95,4 +95,27 @@ impl Aabb {
         }
         true
     }
+
+    pub fn longest_axis(&self) -> i32 {
+        // Returns the index of the longest axis of the bounding box.
+
+        if self.x.size() > self.y.size() {
+            if self.x.size() > self.z.size() { 0 } else { 2 }
+        } else if self.y.size() > self.z.size() {
+            1
+        } else {
+            2
+        }
+    }
+
+    pub const EMPTY: Self = Self {
+        x: Interval::EMPTY,
+        y: Interval::EMPTY,
+        z: Interval::EMPTY,
+    };
+    pub const UNIVERSE: Self = Self {
+        x: Interval::UNIVERSE,
+        y: Interval::UNIVERSE,
+        z: Interval::UNIVERSE,
+    };
 }
