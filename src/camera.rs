@@ -121,7 +121,7 @@ impl Camera {
 
     pub fn render(&self, world: &dyn Hittable) {
         // output
-        let path = std::path::Path::new("output/book1/image1.png");
+        let path = std::path::Path::new("output/book2/image1.png");
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -170,8 +170,9 @@ impl Camera {
             self.defocus_disk_sample()
         };
         let ray_direction = pixel_sample - ray_origin;
+        let ray_time = random_double();
 
-        Ray::new(&ray_origin, &ray_direction)
+        Ray::new(&ray_origin, &ray_direction, ray_time)
     }
 
     fn sample_square() -> Vec3 {
@@ -194,7 +195,8 @@ impl Camera {
         let mut rec = HitRecord::default();
 
         if world.hit(r, &Interval::new(0.001, INFINITY), &mut rec) {
-            let mut scattered = Ray::new(&Point3::new(0.0, 0.0, 0.0), &Vec3::new(0.0, 0.0, 0.0));
+            let mut scattered =
+                Ray::new(&Point3::new(0.0, 0.0, 0.0), &Vec3::new(0.0, 0.0, 0.0), 0.0);
             let mut attenuation = Color::new(0.0, 0.0, 0.0);
             if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
                 return attenuation * Self::ray_color(&scattered, depth - 1, world);
