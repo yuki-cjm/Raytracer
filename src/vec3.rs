@@ -241,6 +241,19 @@ impl ops::DivAssign<f64> for Vec3 {
     }
 }
 
+impl ops::Index<i32> for Vec3 {
+    type Output = f64;
+
+    fn index(&self, index: i32) -> &f64 {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Index out of bounds for Vec3: {}", index),
+        }
+    }
+}
+
 impl std::fmt::Display for Vec3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} {} {}", self.x, self.y, self.z)

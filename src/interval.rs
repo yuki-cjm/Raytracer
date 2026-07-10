@@ -1,5 +1,6 @@
 use crate::rtweekend::INFINITY;
 
+#[derive(Copy, Clone)]
 pub struct Interval {
     pub min: f64,
     pub max: f64,
@@ -17,6 +18,14 @@ impl Interval {
 
     pub const fn new(min: f64, max: f64) -> Interval {
         Interval { min, max }
+    }
+
+    pub fn new_from_intervals(a: &Self, b: &Self) -> Self {
+        // Create the interval tightly enclosing the two input intervals.
+        Self {
+            min: f64::min(a.min, b.min),
+            max: f64::max(a.max, b.max),
+        }
     }
 
     pub fn size(&self) -> f64 {
@@ -39,6 +48,14 @@ impl Interval {
             return self.max;
         }
         x
+    }
+
+    pub fn expand(&self, delta: f64) -> Self {
+        let padding = delta / 2.0;
+        Self {
+            min: self.min - padding,
+            max: self.max + padding,
+        }
     }
 }
 

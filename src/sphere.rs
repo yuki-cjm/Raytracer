@@ -1,18 +1,21 @@
+use std::rc::Rc;
+
+use crate::aabb::Aabb;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
-use std::rc::Rc;
 
 pub struct Sphere {
     pub center: Ray,
     pub radius: f64,
     pub mat: Rc<dyn Material>,
+    pub bbox: Aabb,
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
         let current_center = self.center.at(r.time);
         let oc = current_center - r.orig;
         let a = r.dir.length_squared();
@@ -43,15 +46,21 @@ impl Hittable for Sphere {
 
         true
     }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox.clone()
+    }
 }
 
 impl Sphere {
     // Stationary Sphere
     pub fn new_stationary(static_center: &Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+        let rvec = Vec3::new(radius, radius, radius);
         Self {
             center: Ray::new(static_center, &Vec3::new(0.0, 0.0, 0.0), 0.0),
-            radius,
+            radius: f64::max(0.0, radius),
             mat,
+            bbox: Aabb::new_from_points(&(*static_center - rvec), &(*static_center + rvec)),
         }
     }
 
@@ -62,10 +71,15 @@ impl Sphere {
         radius: f64,
         mat: Rc<dyn Material>,
     ) -> Self {
+        let center = Ray::new(center1, &(*center2 - *center1), 0.0);
+        let rvec = Vec3::new(radius, radius, radius);
+        let box1 = Aabb::new_from_points(&(center.at(0.0) - rvec), &(center.at(0.0) + rvec));
+        let box2 = Aabb::new_from_points(&(center.at(1.0) - rvec), &(center.at(1.0) + rvec));
         Self {
-            center: Ray::new(center1, &(*center2 - *center1), 0.0),
-            radius,
+            center,
+            radius: f64::max(0.0, radius),
             mat,
+            bbox: Aabb::new_from_boxs(&box1, &box2),
         }
     }
 }
