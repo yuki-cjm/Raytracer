@@ -46,16 +46,16 @@ pub struct Camera {
 #[allow(clippy::too_many_arguments)]
 impl Camera {
     pub fn new(
-        aspect_ratio: f64,
-        image_width: u32,
-        samples_per_pixel: u32,
-        max_depth: i32,
-        vfov: f64,
-        lookfrom: &Point3,
-        lookat: &Point3,
-        vup: &Vec3,
-        defocus_angle: f64,
-        focus_dist: f64,
+        aspect_ratio: f64,      // 1.0
+        image_width: u32,       // 100
+        samples_per_pixel: u32, // 10
+        max_depth: i32,         // 10
+        vfov: f64,              // 90.0
+        lookfrom: &Point3,      // &Point3::new(0.0, 0.0, 0.0)
+        lookat: &Point3,        // &Point3::new(0.0, 0.0, -1.0)
+        vup: &Vec3,             // &Vec3::new(0.0, 1.0, 0.0)
+        defocus_angle: f64,     // 0.0
+        focus_dist: f64,        // 10.0
     ) -> Self {
         let image_height = ((image_width as f64) / aspect_ratio) as u32;
         let image_height = image_height.max(1);

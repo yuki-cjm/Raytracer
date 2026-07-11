@@ -27,7 +27,7 @@ use crate::texture::CheckerTexture;
 #[allow(unused_imports)]
 use crate::vec3::{Point3, Vec3};
 
-fn main() {
+fn bouncing_spheres() {
     let mut world = HittableList::new();
 
     let checker = Rc::new(CheckerTexture::from_colors(
@@ -116,9 +116,55 @@ fn main() {
         20.0,
         &Point3::new(13.0, 2.0, 3.0),
         &Point3::new(0.0, 0.0, 0.0),
-        &Point3::new(0.0, 1.0, 0.0),
+        &Vec3::new(0.0, 1.0, 0.0),
         0.6,
         10.0,
     );
+
     cam.render(&world);
+}
+
+fn checkered_spheres() {
+    let mut world = HittableList::new();
+
+    let checker = Rc::new(CheckerTexture::from_colors(
+        0.32,
+        &Color::new(0.2, 0.3, 0.1),
+        &Color::new(0.9, 0.9, 0.9),
+    ));
+
+    world.add(Rc::new(Sphere::new_stationary(
+        &Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        Rc::new(Lambertian::new(checker.clone())),
+    )));
+    world.add(Rc::new(Sphere::new_stationary(
+        &Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        Rc::new(Lambertian::new(checker.clone())),
+    )));
+
+    let cam = Camera::new(
+        16.0 / 9.0,
+        400,
+        100,
+        50,
+        20.0,
+        &Point3::new(13.0, 2.0, 3.0),
+        &Point3::new(0.0, 0.0, 0.0),
+        &Vec3::new(0.0, 1.0, 0.0),
+        0.0,
+        10.0,
+    );
+
+    cam.render(&world);
+}
+
+fn main() {
+    let mode = 2;
+    match mode {
+        1 => bouncing_spheres(),
+        2 => checkered_spheres(),
+        _ => unreachable!("invalid mode {}", mode),
+    };
 }
