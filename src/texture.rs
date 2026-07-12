@@ -103,7 +103,6 @@ impl Texture for ImageTexture {
     }
 }
 
-#[allow(dead_code)]
 pub struct NoiseTexture {
     noise: Perlin,
     scale: f64,
@@ -120,6 +119,7 @@ impl NoiseTexture {
 
 impl Texture for NoiseTexture {
     fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
-        Color::new(1.0, 1.0, 1.0) * self.noise.turb(p, 7)
+        Color::new(0.5, 0.5, 0.5)
+            * (1.0 + f64::sin(self.scale * p.z + 10.0 * self.noise.turb(p, 7)))
     }
 }
