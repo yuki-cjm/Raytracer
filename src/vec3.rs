@@ -10,7 +10,7 @@ pub struct Vec3 {
 pub type Point3 = Vec3;
 
 impl Vec3 {
-    pub fn zero() -> Self {
+    pub fn default() -> Self {
         Self {
             x: 0.0,
             y: 0.0,

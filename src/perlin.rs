@@ -1,8 +1,10 @@
-use crate::rtweekend::{random_double, random_int};
-use crate::vec3::Point3;
+use std::array;
+
+use crate::rtweekend::random_int;
+use crate::vec3::{Point3, Vec3, dot};
 
 pub struct Perlin {
-    randfloat: [f64; 256],
+    randvec: [Vec3; 256],
     perm_x: [usize; 256],
     perm_y: [usize; 256],
     perm_z: [usize; 256],
@@ -12,10 +14,7 @@ impl Perlin {
     const POINT_COUNT: usize = 256;
 
     pub fn new() -> Self {
-        let mut randfloat = [0.0; Self::POINT_COUNT];
-        for val in &mut randfloat {
-            *val = random_double();
-        }
+        let randvec = array::from_fn(|_| Vec3::random_vec3_range(-1.0, 1.0).unit_vector());
 
         let mut perm_x = [0; Self::POINT_COUNT];
         let mut perm_y = [0; Self::POINT_COUNT];
@@ -26,7 +25,7 @@ impl Perlin {
         Self::perlin_generate_perm(&mut perm_z);
 
         Self {
-            randfloat,
+            randvec,
             perm_x,
             perm_y,
             perm_z,
@@ -38,14 +37,10 @@ impl Perlin {
         let v = p.y - p.y.floor();
         let w = p.z - p.z.floor();
 
-        let u = u * u * (3.0 - 2.0 * u);
-        let v = v * v * (3.0 - 2.0 * v);
-        let w = w * w * (3.0 - 2.0 * w);
-
         let i = p.x.floor() as i32;
         let j = p.y.floor() as i32;
         let k = p.z.floor() as i32;
-        let mut c = [[[0.0; 2]; 2]; 2];
+        let mut c = [[[Vec3::default(); 2]; 2]; 2];
 
         // 修复：使用 iter_mut().enumerate() 替代 0..2 索引，兼容 Clippy 规则
         for (di, arr_di) in c.iter_mut().enumerate() {
@@ -54,12 +49,12 @@ impl Perlin {
                     let idx = self.perm_x[((i + di as i32) & 255) as usize]
                         ^ self.perm_y[((j + dj as i32) & 255) as usize]
                         ^ self.perm_z[((k + dk as i32) & 255) as usize];
-                    *val = self.randfloat[idx];
+                    *val = self.randvec[idx];
                 }
             }
         }
 
-        Self::trilinear_interp(&c, u, v, w)
+        Self::perlin_interp(&c, u, v, w)
     }
 
     fn perlin_generate_perm(p: &mut [usize]) {
@@ -77,17 +72,20 @@ impl Perlin {
         }
     }
 
-    fn trilinear_interp(c: &[[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+    fn perlin_interp(c: &[[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+        let uu = u * u * (3.0 - 2.0 * u);
+        let vv = v * v * (3.0 - 2.0 * v);
+        let ww = w * w * (3.0 - 2.0 * w);
         let mut accum = 0.0;
 
-        // 修复：使用 iter().enumerate() 替代 0..2 索引，兼容 Clippy 规则
         for (i, arr_i) in c.iter().enumerate() {
             for (j, arr_j) in arr_i.iter().enumerate() {
-                for (k, &val) in arr_j.iter().enumerate() {
-                    accum += (i as f64 * u + (1 - i) as f64 * (1.0 - u))
-                        * (j as f64 * v + (1 - j) as f64 * (1.0 - v))
-                        * (k as f64 * w + (1 - k) as f64 * (1.0 - w))
-                        * val;
+                for (k, val) in arr_j.iter().enumerate() {
+                    let weight_v = Vec3::new(u - i as f64, v - j as f64, w - k as f64);
+                    accum += (i as f64 * uu + (1 - i) as f64 * (1.0 - uu))
+                        * (j as f64 * vv + (1 - j) as f64 * (1.0 - vv))
+                        * (k as f64 * ww + (1 - k) as f64 * (1.0 - ww))
+                        * dot(val, &weight_v);
                 }
             }
         }
