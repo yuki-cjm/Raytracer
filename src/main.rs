@@ -7,6 +7,7 @@ mod hittable_list;
 mod interval;
 mod material;
 mod ray;
+mod rtw_stb_image;
 mod rtweekend;
 mod sphere;
 mod texture;
@@ -23,7 +24,7 @@ use crate::material::{Dielectric, Lambertian, Metal};
 #[allow(unused_imports)]
 use crate::rtweekend::{PI, random_double, random_range};
 use crate::sphere::Sphere;
-use crate::texture::CheckerTexture;
+use crate::texture::{CheckerTexture, ImageTexture};
 #[allow(unused_imports)]
 use crate::vec3::{Point3, Vec3};
 
@@ -160,11 +161,37 @@ fn checkered_spheres() {
     cam.render(&world);
 }
 
+fn earth() {
+    let earth_texture = Rc::new(ImageTexture::new("earthmap.jpg"));
+    let earth_surface = Rc::new(Lambertian::new(earth_texture));
+    let globe = Rc::new(Sphere::new_stationary(
+        &Point3::new(0.0, 0.0, 0.0),
+        2.0,
+        earth_surface,
+    ));
+
+    let cam = Camera::new(
+        16.0 / 9.0,
+        400,
+        100,
+        50,
+        20.0,
+        &Point3::new(0.0, 0.0, 12.0),
+        &Point3::new(0.0, 0.0, 0.0),
+        &Vec3::new(0.0, 1.0, 0.0),
+        0.0,
+        10.0,
+    );
+
+    cam.render(&HittableList::new_one(globe));
+}
+
 fn main() {
-    let mode = 2;
+    let mode = 3;
     match mode {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
+        3 => earth(),
         _ => unreachable!("invalid mode {}", mode),
     };
 }

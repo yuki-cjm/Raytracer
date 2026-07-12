@@ -24,8 +24,8 @@ impl Clone for HitRecord {
             normal: self.normal,
             mat: Rc::clone(&self.mat),
             t: self.t,
-            u: f64::default(),
-            v: f64::default(),
+            u: self.u,
+            v: self.v,
             front_face: self.front_face,
         }
     }
