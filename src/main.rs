@@ -190,7 +190,7 @@ fn earth() {
 fn perlin_spheres() {
     let mut world = HittableList::new();
 
-    let pertext = Rc::new(NoiseTexture::new());
+    let pertext = Rc::new(NoiseTexture::new(4.0));
     world.add(Rc::new(Sphere::new_stationary(
         &Point3::new(0.0, -1000.0, 0.0),
         1000.0,
