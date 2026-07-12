@@ -6,6 +6,7 @@ mod hittable;
 mod hittable_list;
 mod interval;
 mod material;
+mod perlin;
 mod ray;
 mod rtw_stb_image;
 mod rtweekend;
@@ -24,7 +25,7 @@ use crate::material::{Dielectric, Lambertian, Metal};
 #[allow(unused_imports)]
 use crate::rtweekend::{PI, random_double, random_range};
 use crate::sphere::Sphere;
-use crate::texture::{CheckerTexture, ImageTexture};
+use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 #[allow(unused_imports)]
 use crate::vec3::{Point3, Vec3};
 
@@ -186,12 +187,44 @@ fn earth() {
     cam.render(&HittableList::new_one(globe));
 }
 
+fn perlin_spheres() {
+    let mut world = HittableList::new();
+
+    let pertext = Rc::new(NoiseTexture::new());
+    world.add(Rc::new(Sphere::new_stationary(
+        &Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Rc::new(Lambertian::new(pertext.clone())),
+    )));
+    world.add(Rc::new(Sphere::new_stationary(
+        &Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        Rc::new(Lambertian::new(pertext.clone())),
+    )));
+
+    let cam = Camera::new(
+        16.0 / 9.0,
+        400,
+        100,
+        50,
+        20.0,
+        &Point3::new(13.0, 2.0, 3.0),
+        &Point3::new(0.0, 0.0, 0.0),
+        &Vec3::new(0.0, 1.0, 0.0),
+        0.0,
+        10.0,
+    );
+
+    cam.render(&world);
+}
+
 fn main() {
-    let mode = 3;
+    let mode = 4;
     match mode {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
+        4 => perlin_spheres(),
         _ => unreachable!("invalid mode {}", mode),
     };
 }
