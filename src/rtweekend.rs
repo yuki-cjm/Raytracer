@@ -15,7 +15,6 @@ pub fn random_range(min: f64, max: f64) -> f64 {
     min + (max - min) * random_double()
 }
 
-#[allow(dead_code)]
 pub fn random_int(min: i32, max: i32) -> i32 {
     // Returns a random integer in [min,max].
     random_range(min as f64, (max + 1) as f64) as i32
