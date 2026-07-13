@@ -326,8 +326,70 @@ fn simple_light() {
     cam.render(&world);
 }
 
+fn cornell_box() {
+    let mut world = HittableList::new();
+
+    let red = Rc::new(Lambertian::from_color(&Color::new(0.65, 0.05, 0.05)));
+    let white = Rc::new(Lambertian::from_color(&Color::new(0.73, 0.73, 0.73)));
+    let green = Rc::new(Lambertian::from_color(&Color::new(0.12, 0.45, 0.15)));
+    let light = Rc::new(DiffuseLight::from_color(&Color::new(15.0, 15.0, 15.0)));
+
+    world.add(Rc::new(Quad::new(
+        &Point3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        green.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        &Point3::new(0.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        red.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        &Point3::new(343.0, 554.0, 332.0),
+        &Vec3::new(-130.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -105.0),
+        light.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        &Point3::new(0.0, 0.0, 0.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 555.0),
+        white.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        &Point3::new(555.0, 555.0, 555.0),
+        &Vec3::new(-555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -555.0),
+        white.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        &Point3::new(0.0, 0.0, 555.0),
+        &Vec3::new(555.0, 0.0, 0.0),
+        &Vec3::new(0.0, 555.0, 0.0),
+        white.clone(),
+    )));
+
+    let cam = Camera::new(
+        1.0,
+        600,
+        200,
+        50,
+        &Color::new(0.0, 0.0, 0.0),
+        40.0,
+        &Point3::new(278.0, 278.0, -800.0),
+        &Point3::new(278.0, 278.0, 0.0),
+        &Vec3::new(0.0, 1.0, 0.0),
+        0.0,
+        10.0,
+    );
+
+    cam.render(&world);
+}
+
 fn main() {
-    let mode = 6;
+    let mode = 7;
     match mode {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
@@ -335,6 +397,7 @@ fn main() {
         4 => perlin_spheres(),
         5 => quads(),
         6 => simple_light(),
+        7 => cornell_box(),
         _ => unreachable!("invalid mode {}", mode),
     };
 }
