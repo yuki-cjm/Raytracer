@@ -146,8 +146,8 @@ impl Camera {
                 }
                 pixel_color *= self.pixel_samples_scale;
                 *pixel = image::Rgb(get_color(&pixel_color));
+                progress.inc(1);
             }
-            progress.inc(1);
         }
         progress.finish();
 

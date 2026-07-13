@@ -23,7 +23,7 @@ use crate::color::Color;
 use crate::hittable_list::HittableList;
 #[allow(unused_imports)]
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
-use crate::quad::Quad;
+use crate::quad::{Quad, box_shape};
 use crate::rtweekend::{random_double, random_range};
 use crate::sphere::Sphere;
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture};
@@ -370,6 +370,17 @@ fn cornell_box() {
         &Vec3::new(0.0, 555.0, 0.0),
         white.clone(),
     )));
+
+    world.add(box_shape(
+        &Point3::new(130.0, 0.0, 65.0),
+        &Point3::new(295.0, 165.0, 230.0),
+        white.clone(),
+    ));
+    world.add(box_shape(
+        &Point3::new(265.0, 0.0, 295.0),
+        &Point3::new(430.0, 330.0, 460.0),
+        white.clone(),
+    ));
 
     let cam = Camera::new(
         1.0,
