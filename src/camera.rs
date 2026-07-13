@@ -17,6 +17,7 @@ pub struct Camera {
     image_width: u32,         // Rendered image width in pixel count
     samples_per_pixel: u32,   // Count of random samples for each pixel
     max_depth: i32,           // Maximum number of ray bounces into scene
+    background: Color,        // Scene background color
     pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
 
     // Camera
@@ -50,6 +51,7 @@ impl Camera {
         image_width: u32,       // 100
         samples_per_pixel: u32, // 10
         max_depth: i32,         // 10
+        background: &Color,     // no default
         vfov: f64,              // 90.0
         lookfrom: &Point3,      // &Point3::new(0.0, 0.0, 0.0)
         lookat: &Point3,        // &Point3::new(0.0, 0.0, -1.0)
@@ -94,10 +96,11 @@ impl Camera {
 
         Self {
             aspect_ratio,
+            image_height,
             image_width,
             samples_per_pixel,
             max_depth,
-            image_height,
+            background: *background,
             pixel_samples_scale,
             center,
             viewport_height,
@@ -139,7 +142,7 @@ impl Camera {
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _sample in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
-                    pixel_color += Self::ray_color(&r, self.max_depth, world);
+                    pixel_color += self.ray_color(&r, self.max_depth, world);
                 }
                 pixel_color *= self.pixel_samples_scale;
                 *pixel = image::Rgb(get_color(&pixel_color));
@@ -186,7 +189,7 @@ impl Camera {
         self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
     }
 
-    fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+    fn ray_color(&self, r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
         // If we've exceeded the ray bounce limit, no more light is gathered.
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
@@ -194,19 +197,21 @@ impl Camera {
 
         let mut rec = HitRecord::default();
 
-        if world.hit(r, &mut Interval::new(0.001, INFINITY), &mut rec) {
-            let mut scattered =
-                Ray::new(&Point3::new(0.0, 0.0, 0.0), &Vec3::new(0.0, 0.0, 0.0), 0.0);
-            let mut attenuation = Color::new(0.0, 0.0, 0.0);
-            if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
-                return attenuation * Self::ray_color(&scattered, depth - 1, world);
-            } else {
-                return Color::new(0.0, 0.0, 0.0);
-            }
+        // If the ray hits nothing, return the background color.
+        if !world.hit(r, &mut Interval::new(0.001, INFINITY), &mut rec) {
+            return self.background;
         }
 
-        let unit_direction = r.dir.unit_vector();
-        let a = 0.5 * (unit_direction.y + 1.0);
-        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+        let mut scattered = Ray::default();
+        let mut attenuation = Color::default();
+        let color_from_emission = rec.mat.emitted(rec.u, rec.v, &rec.p);
+
+        if !rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
+            return color_from_emission;
+        }
+
+        let color_from_scatter = attenuation * self.ray_color(&scattered, depth - 1, world);
+
+        color_from_emission + color_from_scatter
     }
 }

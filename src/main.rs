@@ -22,7 +22,7 @@ use crate::camera::Camera;
 use crate::color::Color;
 use crate::hittable_list::HittableList;
 #[allow(unused_imports)]
-use crate::material::{Dielectric, Lambertian, Metal};
+use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use crate::quad::Quad;
 use crate::rtweekend::{random_double, random_range};
 use crate::sphere::Sphere;
@@ -115,6 +115,7 @@ fn bouncing_spheres() {
         400,
         100,
         50,
+        &Color::new(0.70, 0.80, 1.00),
         20.0,
         &Point3::new(13.0, 2.0, 3.0),
         &Point3::new(0.0, 0.0, 0.0),
@@ -151,6 +152,7 @@ fn checkered_spheres() {
         400,
         100,
         50,
+        &Color::new(0.70, 0.80, 1.00),
         20.0,
         &Point3::new(13.0, 2.0, 3.0),
         &Point3::new(0.0, 0.0, 0.0),
@@ -176,6 +178,7 @@ fn earth() {
         400,
         100,
         50,
+        &Color::new(0.70, 0.80, 1.00),
         20.0,
         &Point3::new(0.0, 0.0, 12.0),
         &Point3::new(0.0, 0.0, 0.0),
@@ -207,6 +210,7 @@ fn perlin_spheres() {
         400,
         100,
         50,
+        &Color::new(0.70, 0.80, 1.00),
         20.0,
         &Point3::new(13.0, 2.0, 3.0),
         &Point3::new(0.0, 0.0, 0.0),
@@ -265,6 +269,7 @@ fn quads() {
         400,
         100,
         50,
+        &Color::new(0.70, 0.80, 1.00),
         80.0,
         &Point3::new(0.0, 0.0, 9.0),
         &Point3::new(0.0, 0.0, 0.0),
@@ -276,14 +281,55 @@ fn quads() {
     cam.render(&world);
 }
 
+fn simple_light() {
+    let mut world = HittableList::new();
+
+    let pertext = Rc::new(NoiseTexture::new(4.0));
+    world.add(Rc::new(Sphere::new_stationary(
+        &Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Rc::new(Lambertian::new(pertext.clone())),
+    )));
+    world.add(Rc::new(Sphere::new_stationary(
+        &Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        Rc::new(Lambertian::new(pertext.clone())),
+    )));
+
+    let difflight = Rc::new(DiffuseLight::from_color(&Color::new(4.0, 4.0, 4.0)));
+    world.add(Rc::new(Quad::new(
+        &Point3::new(3.0, 1.0, -2.0),
+        &Vec3::new(2.0, 0.0, 0.0),
+        &Vec3::new(0.0, 2.0, 0.0),
+        difflight,
+    )));
+
+    let cam = Camera::new(
+        16.0 / 9.0,
+        400,
+        100,
+        50,
+        &Color::new(0.0, 0.0, 0.0),
+        20.0,
+        &Point3::new(26.0, 3.0, 6.0),
+        &Point3::new(0.0, 2.0, 0.0),
+        &Vec3::new(0.0, 1.0, 0.0),
+        0.0,
+        10.0,
+    );
+
+    cam.render(&world);
+}
+
 fn main() {
-    let mode = 5;
+    let mode = 6;
     match mode {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
         4 => perlin_spheres(),
         5 => quads(),
+        6 => simple_light(),
         _ => unreachable!("invalid mode {}", mode),
     };
 }
