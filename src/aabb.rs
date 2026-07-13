@@ -1,6 +1,8 @@
+use std::ops;
+
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::vec3::Point3;
+use crate::vec3::{Point3, Vec3};
 
 #[derive(Clone, Copy)]
 pub struct Aabb {
@@ -138,5 +140,24 @@ impl Aabb {
         if self.z.size() < delta {
             self.z = self.z.expand(delta);
         }
+    }
+}
+
+impl ops::Add<Vec3> for Aabb {
+    type Output = Aabb;
+
+    fn add(self, offset: Vec3) -> Aabb {
+        Aabb {
+            x: self.x + offset.x,
+            y: self.y + offset.y,
+            z: self.z + offset.z,
+        }
+    }
+}
+impl ops::Add<Aabb> for Vec3 {
+    type Output = Aabb;
+
+    fn add(self, bbox: Aabb) -> Aabb {
+        bbox + self
     }
 }

@@ -20,6 +20,7 @@ use std::rc::Rc;
 use crate::bvh::BvhNode;
 use crate::camera::Camera;
 use crate::color::Color;
+use crate::hittable::{RotateY, Translate};
 use crate::hittable_list::HittableList;
 #[allow(unused_imports)]
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
@@ -371,16 +372,23 @@ fn cornell_box() {
         white.clone(),
     )));
 
-    world.add(box_shape(
-        &Point3::new(130.0, 0.0, 65.0),
-        &Point3::new(295.0, 165.0, 230.0),
+    let box1 = box_shape(
+        &Point3::new(0.0, 0.0, 0.0),
+        &Point3::new(165.0, 330.0, 165.0),
         white.clone(),
-    ));
-    world.add(box_shape(
-        &Point3::new(265.0, 0.0, 295.0),
-        &Point3::new(430.0, 330.0, 460.0),
-        white.clone(),
-    ));
+    );
+    let box1 = Rc::new(RotateY::new(box1, 15.0));
+    let box1 = Rc::new(Translate::new(box1, &Vec3::new(265.0, 0.0, 295.0)));
+    world.add(box1);
+
+    let box2 = box_shape(
+        &Point3::new(0.0, 0.0, 0.0),
+        &Point3::new(165.0, 165.0, 165.0),
+        white,
+    );
+    let box2 = Rc::new(RotateY::new(box2, -18.0));
+    let box2 = Rc::new(Translate::new(box2, &Vec3::new(130.0, 0.0, 65.0)));
+    world.add(box2);
 
     let cam = Camera::new(
         1.0,

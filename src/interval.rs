@@ -1,3 +1,5 @@
+use std::ops;
+
 use crate::rtweekend::INFINITY;
 
 #[derive(Copy, Clone)]
@@ -60,4 +62,23 @@ impl Interval {
 
     pub const EMPTY: Interval = Interval::new(INFINITY, -INFINITY);
     pub const UNIVERSE: Interval = Interval::new(-INFINITY, INFINITY);
+}
+
+impl ops::Add<f64> for Interval {
+    type Output = Interval;
+
+    fn add(self, displacement: f64) -> Interval {
+        Interval {
+            min: self.min + displacement,
+            max: self.max + displacement,
+        }
+    }
+}
+
+impl ops::Add<Interval> for f64 {
+    type Output = Interval;
+
+    fn add(self, ival: Interval) -> Interval {
+        ival + self
+    }
 }
