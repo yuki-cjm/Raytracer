@@ -23,7 +23,7 @@ impl BvhNode {
         // Build the bounding box of the span of source objects.
         let mut bbox = Aabb::EMPTY;
         for obj in &objects[start..end] {
-            bbox = Aabb::new_from_boxs(&bbox, &obj.bounding_box());
+            bbox = Aabb::new_from_boxes(&bbox, &obj.bounding_box());
         }
 
         let axis = bbox.longest_axis();
@@ -76,7 +76,7 @@ impl Hittable for BvhNode {
     }
 
     fn bounding_box(&self) -> Aabb {
-        self.bbox.clone()
+        self.bbox
     }
 }
 

@@ -2,7 +2,7 @@ use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::Point3;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Aabb {
     pub x: Interval,
     pub y: Interval,
@@ -20,11 +20,13 @@ impl Aabb {
     }
 
     pub fn new(x: &Interval, y: &Interval, z: &Interval) -> Self {
-        Self {
+        let mut ans = Self {
             x: *x,
             y: *y,
             z: *z,
-        }
+        };
+        ans.pad_to_minimums();
+        ans
     }
 
     pub fn new_from_points(a: &Point3, b: &Point3) -> Self {
@@ -43,10 +45,13 @@ impl Aabb {
         } else {
             Interval::new(b.z, a.z)
         };
-        Self { x, y, z }
+
+        let mut ans = Self { x, y, z };
+        ans.pad_to_minimums();
+        ans
     }
 
-    pub fn new_from_boxs(box0: &Self, box1: &Self) -> Self {
+    pub fn new_from_boxes(box0: &Self, box1: &Self) -> Self {
         Self {
             x: Interval::new_from_intervals(&box0.x, &box1.x),
             y: Interval::new_from_intervals(&box0.y, &box1.y),
@@ -113,9 +118,25 @@ impl Aabb {
         y: Interval::EMPTY,
         z: Interval::EMPTY,
     };
+
     pub const UNIVERSE: Self = Self {
         x: Interval::UNIVERSE,
         y: Interval::UNIVERSE,
         z: Interval::UNIVERSE,
     };
+
+    fn pad_to_minimums(&mut self) {
+        // Adjust the AABB so that no side is narrower than some delta, padding if necessary.
+
+        let delta = 0.0001;
+        if self.x.size() < delta {
+            self.x = self.x.expand(delta);
+        }
+        if self.y.size() < delta {
+            self.y = self.y.expand(delta);
+        }
+        if self.z.size() < delta {
+            self.z = self.z.expand(delta);
+        }
+    }
 }

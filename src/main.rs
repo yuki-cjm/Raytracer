@@ -7,6 +7,7 @@ mod hittable_list;
 mod interval;
 mod material;
 mod perlin;
+mod quad;
 mod ray;
 mod rtw_stb_image;
 mod rtweekend;
@@ -22,11 +23,10 @@ use crate::color::Color;
 use crate::hittable_list::HittableList;
 #[allow(unused_imports)]
 use crate::material::{Dielectric, Lambertian, Metal};
-#[allow(unused_imports)]
-use crate::rtweekend::{PI, random_double, random_range};
+use crate::quad::Quad;
+use crate::rtweekend::{random_double, random_range};
 use crate::sphere::Sphere;
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture};
-#[allow(unused_imports)]
 use crate::vec3::{Point3, Vec3};
 
 fn bouncing_spheres() {
@@ -218,13 +218,72 @@ fn perlin_spheres() {
     cam.render(&world);
 }
 
+fn quads() {
+    let mut world = HittableList::new();
+
+    // Materials
+    let left_red = Rc::new(Lambertian::from_color(&Color::new(1.0, 0.2, 0.2)));
+    let back_green = Rc::new(Lambertian::from_color(&Color::new(0.2, 1.0, 0.2)));
+    let right_blue = Rc::new(Lambertian::from_color(&Color::new(0.2, 0.2, 1.0)));
+    let upper_orange = Rc::new(Lambertian::from_color(&Color::new(1.0, 0.5, 0.0)));
+    let lower_teal = Rc::new(Lambertian::from_color(&Color::new(0.2, 0.8, 0.8)));
+
+    // Quads
+    world.add(Rc::new(Quad::new(
+        &Point3::new(-3.0, -2.0, 5.0),
+        &Vec3::new(0.0, 0.0, -4.0),
+        &Vec3::new(0.0, 4.0, 0.0),
+        left_red.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        &Point3::new(-2.0, -2.0, 0.0),
+        &Vec3::new(4.0, 0.0, 0.0),
+        &Vec3::new(0.0, 4.0, 0.0),
+        back_green.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        &Point3::new(3.0, -2.0, 1.0),
+        &Vec3::new(0.0, 0.0, 4.0),
+        &Vec3::new(0.0, 4.0, 0.0),
+        right_blue.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        &Point3::new(-2.0, 3.0, 1.0),
+        &Vec3::new(4.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 4.0),
+        upper_orange.clone(),
+    )));
+    world.add(Rc::new(Quad::new(
+        &Point3::new(-2.0, -3.0, 5.0),
+        &Vec3::new(4.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -4.0),
+        lower_teal.clone(),
+    )));
+
+    let cam = Camera::new(
+        1.0,
+        400,
+        100,
+        50,
+        80.0,
+        &Point3::new(0.0, 0.0, 9.0),
+        &Point3::new(0.0, 0.0, 0.0),
+        &Vec3::new(0.0, 1.0, 0.0),
+        0.0,
+        10.0,
+    );
+
+    cam.render(&world);
+}
+
 fn main() {
-    let mode = 4;
+    let mode = 5;
     match mode {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
         4 => perlin_spheres(),
+        5 => quads(),
         _ => unreachable!("invalid mode {}", mode),
     };
 }

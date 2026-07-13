@@ -50,7 +50,7 @@ impl Hittable for Sphere {
     }
 
     fn bounding_box(&self) -> Aabb {
-        self.bbox.clone()
+        self.bbox
     }
 }
 
@@ -81,7 +81,7 @@ impl Sphere {
             center,
             radius: f64::max(0.0, radius),
             mat,
-            bbox: Aabb::new_from_boxs(&box1, &box2),
+            bbox: Aabb::new_from_boxes(&box1, &box2),
         }
     }
 

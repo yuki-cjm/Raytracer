@@ -31,7 +31,7 @@ impl HittableList {
 
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
         self.objects.push(object.clone());
-        self.bbox = Aabb::new_from_boxs(&self.bbox, &object.bounding_box());
+        self.bbox = Aabb::new_from_boxes(&self.bbox, &object.bounding_box());
     }
 }
 
@@ -57,6 +57,6 @@ impl Hittable for HittableList {
     }
 
     fn bounding_box(&self) -> Aabb {
-        self.bbox.clone()
+        self.bbox
     }
 }
