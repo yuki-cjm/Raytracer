@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::aabb::Aabb;
 use crate::color::Color;
@@ -11,26 +11,26 @@ use crate::texture::Texture;
 use crate::vec3::Vec3;
 
 pub struct ConstantMedium {
-    boundary: Rc<dyn Hittable>,
+    boundary: Arc<dyn Hittable>,
     neg_inv_density: f64,
-    phase_function: Rc<dyn Material>,
+    phase_function: Arc<dyn Material>,
 }
 
 impl ConstantMedium {
     #[allow(dead_code)]
-    pub fn new(boundary: Rc<dyn Hittable>, density: f64, tex: Rc<dyn Texture>) -> Self {
+    pub fn new(boundary: Arc<dyn Hittable>, density: f64, tex: Arc<dyn Texture>) -> Self {
         Self {
             boundary,
             neg_inv_density: -1.0 / density,
-            phase_function: Rc::new(Isotropic::new(tex)),
+            phase_function: Arc::new(Isotropic::new(tex)),
         }
     }
 
-    pub fn from_color(boundary: Rc<dyn Hittable>, density: f64, albedo: &Color) -> Self {
+    pub fn from_color(boundary: Arc<dyn Hittable>, density: f64, albedo: &Color) -> Self {
         Self {
             boundary,
             neg_inv_density: -1.0 / density,
-            phase_function: Rc::new(Isotropic::from_color(albedo)),
+            phase_function: Arc::new(Isotropic::from_color(albedo)),
         }
     }
 }

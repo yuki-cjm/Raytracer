@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::aabb::Aabb;
 use crate::color::Color;
@@ -12,14 +12,14 @@ use crate::vec3::{Point3, Vec3};
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material>,
     pub t: f64,
     pub u: f64,
     pub v: f64,
     pub front_face: bool,
 }
 
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool;
 
     fn bounding_box(&self) -> Aabb;
@@ -30,7 +30,7 @@ impl HitRecord {
         Self {
             p: Point3::new(0.0, 0.0, 0.0),
             normal: Vec3::new(0.0, 0.0, 0.0),
-            mat: Rc::new(Lambertian::from_color(&Color::new(0.0, 0.0, 0.0))),
+            mat: Arc::new(Lambertian::from_color(&Color::new(0.0, 0.0, 0.0))),
             t: 0.0,
             u: f64::default(),
             v: f64::default(),
@@ -52,13 +52,13 @@ impl HitRecord {
 }
 
 pub struct Translate {
-    object: Rc<dyn Hittable>,
+    object: Arc<dyn Hittable>,
     offset: Vec3,
     bbox: Aabb,
 }
 
 impl Translate {
-    pub fn new(object: Rc<dyn Hittable>, offset: &Vec3) -> Self {
+    pub fn new(object: Arc<dyn Hittable>, offset: &Vec3) -> Self {
         let bbox = object.bounding_box() + *offset;
         Self {
             object,
@@ -90,14 +90,14 @@ impl Hittable for Translate {
 }
 
 pub struct RotateY {
-    object: Rc<dyn Hittable>,
+    object: Arc<dyn Hittable>,
     sin_theta: f64,
     cos_theta: f64,
     bbox: Aabb,
 }
 
 impl RotateY {
-    pub fn new(object: Rc<dyn Hittable>, angle: f64) -> Self {
+    pub fn new(object: Arc<dyn Hittable>, angle: f64) -> Self {
         let radians = degrees_to_radians(angle);
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();

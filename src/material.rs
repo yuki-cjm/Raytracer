@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::color::Color;
 use crate::hittable::HitRecord;
@@ -7,7 +7,7 @@ use crate::rtweekend::random_double;
 use crate::texture::{SolidColor, Texture};
 use crate::vec3::{Point3, Vec3, dot, reflect, refract};
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn emitted(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
@@ -25,17 +25,17 @@ pub trait Material {
 
 #[derive(Clone)]
 pub struct Lambertian {
-    tex: Rc<dyn Texture>,
+    tex: Arc<dyn Texture>,
 }
 
 impl Lambertian {
     pub fn from_color(albedo: &Color) -> Self {
         Self {
-            tex: Rc::new(SolidColor::new(albedo)),
+            tex: Arc::new(SolidColor::new(albedo)),
         }
     }
 
-    pub fn new(tex: Rc<dyn Texture>) -> Self {
+    pub fn new(tex: Arc<dyn Texture>) -> Self {
         Self { tex }
     }
 }
@@ -67,7 +67,6 @@ pub struct Metal {
     fuzz: f64,
 }
 
-#[allow(dead_code)]
 impl Metal {
     pub fn new(albedo: &Color, fuzz: f64) -> Metal {
         Metal {
@@ -146,18 +145,18 @@ impl Material for Dielectric {
 }
 
 pub struct DiffuseLight {
-    tex: Rc<dyn Texture>,
+    tex: Arc<dyn Texture>,
 }
 
 impl DiffuseLight {
     #[allow(dead_code)]
-    pub fn new(tex: Rc<dyn Texture>) -> Self {
+    pub fn new(tex: Arc<dyn Texture>) -> Self {
         Self { tex }
     }
 
     pub fn from_color(emit: &Color) -> Self {
         Self {
-            tex: Rc::new(SolidColor::new(emit)),
+            tex: Arc::new(SolidColor::new(emit)),
         }
     }
 }
@@ -169,18 +168,18 @@ impl Material for DiffuseLight {
 }
 
 pub struct Isotropic {
-    tex: Rc<dyn Texture>,
+    tex: Arc<dyn Texture>,
 }
 
 impl Isotropic {
     pub fn from_color(albedo: &Color) -> Self {
         Self {
-            tex: Rc::new(SolidColor::new(albedo)),
+            tex: Arc::new(SolidColor::new(albedo)),
         }
     }
 
     #[allow(dead_code)]
-    pub fn new(tex: Rc<dyn Texture>) -> Self {
+    pub fn new(tex: Arc<dyn Texture>) -> Self {
         Self { tex }
     }
 }

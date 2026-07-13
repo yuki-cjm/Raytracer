@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::aabb::Aabb;
 use crate::hittable::{HitRecord, Hittable};
@@ -11,7 +11,7 @@ use crate::vec3::{Point3, Vec3};
 pub struct Sphere {
     pub center: Ray,
     pub radius: f64,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material>,
     pub bbox: Aabb,
 }
 
@@ -44,7 +44,7 @@ impl Hittable for Sphere {
         let outward_normal = (rec.p - current_center) / self.radius;
         rec.set_face_normal(r, &outward_normal);
         Self::get_sphere_uv(&outward_normal, &mut rec.u, &mut rec.v);
-        rec.mat = Rc::clone(&self.mat);
+        rec.mat = Arc::clone(&self.mat);
 
         true
     }
@@ -56,7 +56,7 @@ impl Hittable for Sphere {
 
 impl Sphere {
     // Stationary Sphere
-    pub fn new_stationary(static_center: &Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+    pub fn new_stationary(static_center: &Point3, radius: f64, mat: Arc<dyn Material>) -> Self {
         let rvec = Vec3::new(radius, radius, radius);
         Self {
             center: Ray::new(static_center, &Vec3::new(0.0, 0.0, 0.0), 0.0),
@@ -71,7 +71,7 @@ impl Sphere {
         center1: &Point3,
         center2: &Point3,
         radius: f64,
-        mat: Rc<dyn Material>,
+        mat: Arc<dyn Material>,
     ) -> Self {
         let center = Ray::new(center1, &(*center2 - *center1), 0.0);
         let rvec = Vec3::new(radius, radius, radius);

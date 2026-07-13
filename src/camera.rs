@@ -8,6 +8,7 @@ use crate::vec3::{Point3, Vec3, cross};
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
+use rayon::prelude::*;
 
 #[allow(dead_code)]
 pub struct Camera {
@@ -122,13 +123,11 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: &dyn Hittable) {
+    pub fn render(&self, world: &(dyn Hittable + Sync)) {
         // output
         let path = std::path::Path::new("output/book2/image.jpg");
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
-
-        let mut img: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
 
         let progress = if option_env!("CI").unwrap_or_default() == "true" {
             ProgressBar::hidden()
@@ -136,20 +135,33 @@ impl Camera {
             ProgressBar::new((self.image_height * self.image_width) as u64)
         };
 
-        for j in 0..self.image_height {
-            for i in 0..self.image_width {
-                let pixel = img.get_pixel_mut(i, j);
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for _sample in 0..self.samples_per_pixel {
-                    let r = self.get_ray(i, j);
-                    pixel_color += self.ray_color(&r, self.max_depth, world);
-                }
-                pixel_color *= self.pixel_samples_scale;
-                *pixel = image::Rgb(get_color(&pixel_color));
-                progress.inc(1);
-            }
-        }
+        // Parallel rendering: process rows in parallel using rayon
+        let pixels: Vec<(u32, u32, [u8; 3])> = (0..self.image_height)
+            .into_par_iter()
+            .flat_map(|j| {
+                (0..self.image_width)
+                    .map(|i| {
+                        let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                        for _sample in 0..self.samples_per_pixel {
+                            let r = self.get_ray(i, j);
+                            pixel_color += self.ray_color(&r, self.max_depth, world);
+                        }
+                        pixel_color *= self.pixel_samples_scale;
+                        let rgb = get_color(&pixel_color);
+                        progress.inc(1);
+                        (i, j, rgb)
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+
         progress.finish();
+
+        // Assemble the image from collected pixels
+        let mut img: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
+        for (i, j, rgb) in pixels {
+            *img.get_pixel_mut(i, j) = image::Rgb(rgb);
+        }
 
         println!(
             "Output image as \"{}\"",
@@ -189,7 +201,7 @@ impl Camera {
         self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
     }
 
-    fn ray_color(&self, r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+    fn ray_color(&self, r: &Ray, depth: i32, world: &(dyn Hittable + Sync)) -> Color {
         // If we've exceeded the ray bounce limit, no more light is gathered.
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
