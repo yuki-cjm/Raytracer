@@ -2,7 +2,8 @@ use crate::color::{Color, get_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::rtweekend::{INFINITY, degrees_to_radians, random_double};
+#[allow(unused_imports)]
+use crate::rtweekend::{INFINITY, PI, degrees_to_radians, random_double};
 use crate::vec3::{Point3, Vec3, cross};
 
 use console::style;
@@ -242,7 +243,11 @@ impl Camera {
             return color_from_emission;
         }
 
-        let color_from_scatter = attenuation * self.ray_color(&scattered, depth - 1, world);
+        let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
+        let pdf_value = 1.0 / (2.0 * PI);
+
+        let color_from_scatter =
+            attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world) / pdf_value;
 
         color_from_emission + color_from_scatter
     }
