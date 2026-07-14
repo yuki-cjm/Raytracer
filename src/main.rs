@@ -622,7 +622,7 @@ fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: i32) {
 }
 
 fn main() {
-    let mode = 9;
+    let mode = 7;
     match mode {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),

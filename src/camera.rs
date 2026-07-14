@@ -20,6 +20,8 @@ pub struct Camera {
     max_depth: i32,           // Maximum number of ray bounces into scene
     background: Color,        // Scene background color
     pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
+    sqrt_spp: u32,            // Square root of number of samples per pixel
+    recip_sqrt_spp: f64,      // 1 / sqrt_spp
 
     // Camera
     center: Point3,       // Camera center position
@@ -63,7 +65,9 @@ impl Camera {
         let image_height = ((image_width as f64) / aspect_ratio) as u32;
         let image_height = image_height.max(1);
 
-        let pixel_samples_scale = 1.0 / samples_per_pixel as f64;
+        let sqrt_spp = samples_per_pixel.isqrt();
+        let pixel_samples_scale = 1.0 / (sqrt_spp * sqrt_spp) as f64;
+        let recip_sqrt_spp = 1.0 / sqrt_spp as f64;
 
         let center = *lookfrom;
 
@@ -103,6 +107,8 @@ impl Camera {
             max_depth,
             background: *background,
             pixel_samples_scale,
+            sqrt_spp,
+            recip_sqrt_spp,
             center,
             viewport_height,
             viewport_width,
@@ -125,7 +131,7 @@ impl Camera {
 
     pub fn render(&self, world: &(dyn Hittable + Sync)) {
         // output
-        let path = std::path::Path::new("output/book2/image.jpg");
+        let path = std::path::Path::new("output/book3/image.jpg");
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -135,23 +141,26 @@ impl Camera {
             ProgressBar::new((self.image_height * self.image_width) as u64)
         };
 
-        // Parallel rendering: process rows in parallel using rayon
-        let pixels: Vec<(u32, u32, [u8; 3])> = (0..self.image_height)
-            .into_par_iter()
-            .flat_map(|j| {
-                (0..self.image_width)
-                    .map(|i| {
-                        let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                        for _sample in 0..self.samples_per_pixel {
-                            let r = self.get_ray(i, j);
-                            pixel_color += self.ray_color(&r, self.max_depth, world);
-                        }
-                        pixel_color *= self.pixel_samples_scale;
-                        let rgb = get_color(&pixel_color);
-                        progress.inc(1);
-                        (i, j, rgb)
-                    })
-                    .collect::<Vec<_>>()
+        // Generate all pixel coordinates
+        let coords: Vec<(u32, u32)> = (0..self.image_height)
+            .flat_map(|j| (0..self.image_width).map(move |i| (i, j)))
+            .collect();
+
+        // Parallel rendering: process each pixel independently using rayon
+        let pixels: Vec<(u32, u32, [u8; 3])> = coords
+            .par_iter()
+            .map(|&(i, j)| {
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                for s_j in 0..self.sqrt_spp {
+                    for s_i in 0..self.sqrt_spp {
+                        let r = self.get_ray(i, j, s_i, s_j);
+                        pixel_color += self.ray_color(&r, self.max_depth, world);
+                    }
+                }
+                pixel_color *= self.pixel_samples_scale;
+                let rgb = get_color(&pixel_color);
+                progress.inc(1);
+                (i, j, rgb)
             })
             .collect();
 
@@ -170,11 +179,11 @@ impl Camera {
         img.save(path).expect("Cannot save the image to the file");
     }
 
-    fn get_ray(&self, i: u32, j: u32) -> Ray {
+    fn get_ray(&self, i: u32, j: u32, s_i: u32, s_j: u32) -> Ray {
         // Construct a camera ray originating from the defocus disk and directed at a randomly
-        // sampled point around the pixel location i, j.
+        // sampled point around the pixel location i, j for stratified sample square s_i, s_j.
 
-        let offset = Self::sample_square();
+        let offset = self.sample_square_stratified(s_i, s_j);
         let pixel_sample = self.pixel00_loc
             + ((i as f64 + offset.x) * self.pixel_delta_u)
             + ((j as f64 + offset.y) * self.pixel_delta_v);
@@ -190,6 +199,17 @@ impl Camera {
         Ray::new(&ray_origin, &ray_direction, ray_time)
     }
 
+    fn sample_square_stratified(&self, s_i: u32, s_j: u32) -> Vec3 {
+        // Returns the vector to a random point in the square sub-pixel specified by grid
+        // indices s_i and s_j, for an idealized unit square pixel [-.5,-.5] to [+.5,+.5].
+
+        let px = (s_i as f64 + random_double()) * self.recip_sqrt_spp - 0.5;
+        let py = (s_j as f64 + random_double()) * self.recip_sqrt_spp - 0.5;
+
+        Vec3::new(px, py, 0.0)
+    }
+
+    #[allow(dead_code)]
     fn sample_square() -> Vec3 {
         // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
         Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0)
