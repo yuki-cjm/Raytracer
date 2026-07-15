@@ -238,7 +238,7 @@ impl Camera {
         let mut scattered = Ray::default();
         let mut attenuation = Color::default();
         let mut pdf_value = f64::default();
-        let color_from_emission = rec.mat.emitted(rec.u, rec.v, &rec.p);
+        let color_from_emission = rec.mat.emitted(r, &rec, rec.u, rec.v, &rec.p);
 
         if !rec
             .mat
