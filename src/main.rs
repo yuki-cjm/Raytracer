@@ -396,7 +396,7 @@ fn cornell_box() {
     let cam = Camera::new(
         1.0,
         600,
-        1000,
+        10,
         50,
         &Color::new(0.0, 0.0, 0.0),
         40.0,

@@ -202,10 +202,15 @@ impl Material for Isotropic {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
-        _pdf: &mut f64,
+        pdf: &mut f64,
     ) -> bool {
         *scattered = Ray::new(&rec.p, &Vec3::random_unit_vector(), r_in.time);
         *attenuation = self.tex.value(rec.u, rec.v, &rec.p);
+        *pdf = 1.0 / (4.0 * PI);
         true
+    }
+
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
+        1.0 / (4.0 * PI)
     }
 }
