@@ -8,6 +8,7 @@ mod hittable_list;
 mod interval;
 mod material;
 mod onb;
+mod pdf;
 mod perlin;
 mod quad;
 mod ray;
@@ -396,7 +397,7 @@ fn cornell_box() {
     let cam = Camera::new(
         1.0,
         600,
-        10,
+        1000,
         50,
         &Color::new(0.0, 0.0, 0.0),
         40.0,

@@ -1,10 +1,11 @@
 use crate::color::{Color, get_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
+use crate::pdf::{CosinePdf, Pdf};
 use crate::ray::Ray;
 #[allow(unused_imports)]
 use crate::rtweekend::{INFINITY, PI, degrees_to_radians, random_double, random_range};
-use crate::vec3::{Point3, Vec3, cross, dot};
+use crate::vec3::{Point3, Vec3, cross};
 
 use console::style;
 use image::{ImageBuffer, RgbImage};
@@ -247,27 +248,9 @@ impl Camera {
             return color_from_emission;
         }
 
-        let on_light = Point3::new(
-            random_range(213.0, 343.0),
-            554.0,
-            random_range(227.0, 332.0),
-        );
-        let to_light = on_light - rec.p;
-        let distance_squard = to_light.length_squared();
-        let to_light = to_light.unit_vector();
-
-        if dot(&to_light, &rec.normal) < 0.0 {
-            return color_from_emission;
-        }
-
-        let light_area = (343.0 - 213.0) * (332.0 - 227.0);
-        let light_cosine = to_light.y.abs();
-        if light_cosine < 0.000001 {
-            return color_from_emission;
-        }
-
-        pdf_value = distance_squard / (light_cosine * light_area);
-        scattered = Ray::new(&rec.p, &to_light, r.time);
+        let surface_pdf = CosinePdf::new(&rec.normal);
+        scattered = Ray::new(&rec.p, &surface_pdf.generate(), r.time);
+        pdf_value = surface_pdf.value(&scattered.dir);
 
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
 
