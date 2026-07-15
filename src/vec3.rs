@@ -1,4 +1,4 @@
-use crate::rtweekend::{random_double, random_range};
+use crate::rtweekend::{PI, random_double, random_range};
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct Vec3 {
@@ -103,6 +103,18 @@ impl Vec3 {
         } else {
             -on_unit_sphere
         }
+    }
+
+    pub fn random_cosine_direction() -> Self {
+        let r1 = random_double();
+        let r2 = random_double();
+
+        let phi = 2.0 * PI * r1;
+        let x = phi.cos() * r2.sqrt();
+        let y = phi.sin() * r2.sqrt();
+        let z = (1.0 - r2).sqrt();
+
+        Self { x, y, z }
     }
 }
 

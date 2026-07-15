@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::color::Color;
 use crate::hittable::HitRecord;
+use crate::onb::Onb;
 use crate::ray::Ray;
 use crate::rtweekend::{PI, random_double};
 use crate::texture::{SolidColor, Texture};
@@ -18,6 +19,7 @@ pub trait Material: Send + Sync {
         _rec: &HitRecord,
         _attenuation: &mut Color,
         _scattered: &mut Ray,
+        _pdf: &mut f64,
     ) -> bool {
         false
     }
@@ -51,16 +53,15 @@ impl Material for Lambertian {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        pdf: &mut f64,
     ) -> bool {
-        let mut scatter_direction = Vec3::random_on_hemisphere(&rec.normal);
+        let uvw = Onb::new(&rec.normal);
+        let scatter_direction = uvw.transform(&Vec3::random_cosine_direction());
 
-        // Catch degenerate scatter direction
-        if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
-        }
-
-        *scattered = Ray::new(&rec.p, &scatter_direction, r_in.time);
+        *scattered = Ray::new(&rec.p, &scatter_direction.unit_vector(), r_in.time);
         *attenuation = self.tex.value(rec.u, rec.v, &rec.p);
+        *pdf = dot(&uvw.w(), &scattered.dir) / PI;
+
         true
     }
 
@@ -91,6 +92,7 @@ impl Material for Metal {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        _pdf: &mut f64,
     ) -> bool {
         let mut reflected = reflect(&r_in.dir, &rec.normal);
         reflected = reflected.unit_vector() + (self.fuzz * Vec3::random_unit_vector());
@@ -127,6 +129,7 @@ impl Material for Dielectric {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        _pdf: &mut f64,
     ) -> bool {
         *attenuation = Color::new(1.0, 1.0, 1.0);
         let ri = if rec.front_face {
@@ -199,6 +202,7 @@ impl Material for Isotropic {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        _pdf: &mut f64,
     ) -> bool {
         *scattered = Ray::new(&rec.p, &Vec3::random_unit_vector(), r_in.time);
         *attenuation = self.tex.value(rec.u, rec.v, &rec.p);
