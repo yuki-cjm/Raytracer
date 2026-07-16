@@ -54,6 +54,7 @@ impl Hittable for Sphere {
     }
 }
 
+#[allow(dead_code)]
 impl Sphere {
     // Stationary Sphere
     pub fn new_stationary(static_center: &Point3, radius: f64, mat: Arc<dyn Material>) -> Self {

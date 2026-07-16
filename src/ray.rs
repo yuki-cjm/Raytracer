@@ -4,7 +4,7 @@ use crate::vec3::{Point3, Vec3};
 pub struct Ray {
     pub orig: Point3,
     pub dir: Vec3,
-    pub time: f64,
+    pub time: f64, // 0.0
 }
 
 impl Ray {

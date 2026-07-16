@@ -29,11 +29,15 @@ pub trait Material: Send + Sync {
     }
 }
 
+pub struct EmptyMaterial;
+impl Material for EmptyMaterial {}
+
 #[derive(Clone)]
 pub struct Lambertian {
     tex: Arc<dyn Texture>,
 }
 
+#[allow(dead_code)]
 impl Lambertian {
     pub fn from_color(albedo: &Color) -> Self {
         Self {
@@ -76,6 +80,7 @@ pub struct Metal {
     fuzz: f64,
 }
 
+#[allow(dead_code)]
 impl Metal {
     pub fn new(albedo: &Color, fuzz: f64) -> Metal {
         Metal {
@@ -186,6 +191,7 @@ pub struct Isotropic {
     tex: Arc<dyn Texture>,
 }
 
+#[allow(dead_code)]
 impl Isotropic {
     pub fn from_color(albedo: &Color) -> Self {
         Self {

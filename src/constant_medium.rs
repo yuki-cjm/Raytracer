@@ -16,8 +16,8 @@ pub struct ConstantMedium {
     phase_function: Arc<dyn Material>,
 }
 
+#[allow(dead_code)]
 impl ConstantMedium {
-    #[allow(dead_code)]
     pub fn new(boundary: Arc<dyn Hittable>, density: f64, tex: Arc<dyn Texture>) -> Self {
         Self {
             boundary,

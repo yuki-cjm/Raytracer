@@ -71,6 +71,7 @@ pub struct ImageTexture {
     image: RtwImage,
 }
 
+#[allow(dead_code)]
 impl ImageTexture {
     pub fn new(filename: &str) -> Self {
         Self {
@@ -108,6 +109,7 @@ pub struct NoiseTexture {
     scale: f64,
 }
 
+#[allow(dead_code)]
 impl NoiseTexture {
     pub fn new(scale: f64) -> Self {
         Self {

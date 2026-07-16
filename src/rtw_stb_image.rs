@@ -9,6 +9,7 @@ pub struct RtwImage {
     bytes_per_scanline: i32,
 }
 
+#[allow(dead_code)]
 impl RtwImage {
     pub fn default() -> Self {
         RtwImage {

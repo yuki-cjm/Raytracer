@@ -10,6 +10,7 @@ pub struct Perlin {
     perm_z: [usize; 256],
 }
 
+#[allow(dead_code)]
 impl Perlin {
     const POINT_COUNT: usize = 256;
 

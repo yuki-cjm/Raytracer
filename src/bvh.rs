@@ -13,6 +13,7 @@ pub struct BvhNode {
     bbox: Aabb,
 }
 
+#[allow(dead_code)]
 impl BvhNode {
     pub fn new(list: &mut HittableList) -> Self {
         let len = list.objects.len();
@@ -82,20 +83,24 @@ impl Hittable for BvhNode {
     }
 }
 
+#[allow(dead_code)]
 fn box_compare(a: Arc<dyn Hittable>, b: Arc<dyn Hittable>, axis_index: i32) -> bool {
     let a_axis_interval = a.bounding_box().axis_interval(axis_index);
     let b_axis_interval = b.bounding_box().axis_interval(axis_index);
     a_axis_interval.min < b_axis_interval.min
 }
 
+#[allow(dead_code)]
 fn box_x_compare(a: Arc<dyn Hittable>, b: Arc<dyn Hittable>) -> bool {
     box_compare(a, b, 0)
 }
 
+#[allow(dead_code)]
 fn box_y_compare(a: Arc<dyn Hittable>, b: Arc<dyn Hittable>) -> bool {
     box_compare(a, b, 1)
 }
 
+#[allow(dead_code)]
 fn box_z_compare(a: Arc<dyn Hittable>, b: Arc<dyn Hittable>) -> bool {
     box_compare(a, b, 2)
 }

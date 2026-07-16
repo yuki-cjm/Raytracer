@@ -1,7 +1,8 @@
 use crate::color::{Color, get_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
-use crate::pdf::{CosinePdf, Pdf};
+#[allow(unused_imports)]
+use crate::pdf::{CosinePdf, HittablePdf, Pdf};
 use crate::ray::Ray;
 #[allow(unused_imports)]
 use crate::rtweekend::{INFINITY, PI, degrees_to_radians, random_double, random_range};
@@ -131,7 +132,7 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: &(dyn Hittable + Sync)) {
+    pub fn render(&self, world: &(dyn Hittable + Sync), lights: &(dyn Hittable + Sync)) {
         // output
         let path = std::path::Path::new("output/book3/image.jpg");
         let prefix = path.parent().unwrap();
@@ -156,7 +157,7 @@ impl Camera {
                 for s_j in 0..self.sqrt_spp {
                     for s_i in 0..self.sqrt_spp {
                         let r = self.get_ray(i, j, s_i, s_j);
-                        pixel_color += self.ray_color(&r, self.max_depth, world);
+                        pixel_color += self.ray_color(&r, self.max_depth, world, lights);
                     }
                 }
                 pixel_color *= self.pixel_samples_scale;
@@ -223,7 +224,13 @@ impl Camera {
         self.center + (p.x * self.defocus_disk_u) + (p.y * self.defocus_disk_v)
     }
 
-    fn ray_color(&self, r: &Ray, depth: i32, world: &(dyn Hittable + Sync)) -> Color {
+    fn ray_color(
+        &self,
+        r: &Ray,
+        depth: i32,
+        world: &(dyn Hittable + Sync),
+        lights: &(dyn Hittable + Sync),
+    ) -> Color {
         // If we've exceeded the ray bounce limit, no more light is gathered.
         if depth <= 0 {
             return Color::new(0.0, 0.0, 0.0);
@@ -248,14 +255,14 @@ impl Camera {
             return color_from_emission;
         }
 
-        let surface_pdf = CosinePdf::new(&rec.normal);
-        scattered = Ray::new(&rec.p, &surface_pdf.generate(), r.time);
-        pdf_value = surface_pdf.value(&scattered.dir);
+        let light_pdf = HittablePdf::new(lights, &rec.p);
+        scattered = Ray::new(&rec.p, &light_pdf.generate(), r.time);
+        pdf_value = light_pdf.value(&scattered.dir);
 
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
 
-        let color_from_scatter =
-            attenuation * scattering_pdf * self.ray_color(&scattered, depth - 1, world) / pdf_value;
+        let sample_color = self.ray_color(&scattered, depth - 1, world, lights);
+        let color_from_scatter = attenuation * scattering_pdf * sample_color / pdf_value;
 
         color_from_emission + color_from_scatter
     }
