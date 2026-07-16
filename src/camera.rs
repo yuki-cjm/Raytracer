@@ -7,6 +7,7 @@ use std::sync::Arc;
 use crate::color::{Color, get_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
+use crate::material::ScatterRecord;
 #[allow(unused_imports)]
 use crate::pdf::{CosinePdf, HittablePdf, MixturePdf, Pdf};
 use crate::ray::Ray;
@@ -244,29 +245,27 @@ impl Camera {
             return self.background;
         }
 
-        let mut scattered = Ray::default();
-        let mut attenuation = Color::default();
-        let mut pdf_value = f64::default();
+        let mut srec = ScatterRecord::default();
         let color_from_emission = rec.mat.emitted(r, &rec, rec.u, rec.v, &rec.p);
 
-        if !rec
-            .mat
-            .scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf_value)
-        {
+        if !rec.mat.scatter(r, &rec, &mut srec) {
             return color_from_emission;
         }
 
-        let p0 = Arc::new(HittablePdf::new(lights, &rec.p));
-        let p1 = Arc::new(CosinePdf::new(&rec.normal));
-        let mixed_pdf = MixturePdf::new(p0, p1);
+        if srec.skip_pdf {
+            return srec.attenuation * self.ray_color(&srec.skip_pdf_ray, depth - 1, world, lights);
+        }
 
-        scattered = Ray::new(&rec.p, &mixed_pdf.generate(), r.time);
-        pdf_value = mixed_pdf.value(&scattered.dir);
+        let light_ptr = Arc::new(HittablePdf::new(lights, &rec.p));
+        let p = MixturePdf::new(light_ptr, srec.pdf_ptr.clone());
+
+        let scattered = Ray::new(&rec.p, &p.generate(), r.time);
+        let pdf_value = p.value(&scattered.dir);
 
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
 
         let sample_color = self.ray_color(&scattered, depth - 1, world, lights);
-        let color_from_scatter = attenuation * scattering_pdf * sample_color / pdf_value;
+        let color_from_scatter = srec.attenuation * scattering_pdf * sample_color / pdf_value;
 
         color_from_emission + color_from_scatter
     }

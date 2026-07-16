@@ -11,11 +11,20 @@ pub trait Pdf: Send + Sync {
     fn generate(&self) -> Vec3;
 }
 
+pub struct EmptyPdf;
+impl Pdf for EmptyPdf {
+    fn value(&self, _direction: &Vec3) -> f64 {
+        0.0
+    }
+    fn generate(&self) -> Vec3 {
+        Vec3::default()
+    }
+}
+
 pub struct CosinePdf {
     uvw: Onb,
 }
 
-#[allow(dead_code)]
 impl CosinePdf {
     pub fn new(w: &Vec3) -> Self {
         Self { uvw: Onb::new(w) }
@@ -78,5 +87,17 @@ impl Pdf for MixturePdf<'_> {
         } else {
             self.p[1].generate()
         }
+    }
+}
+
+pub struct SpherePdf;
+
+impl Pdf for SpherePdf {
+    fn value(&self, _direction: &Vec3) -> f64 {
+        1.0 / (4.0 * PI)
+    }
+
+    fn generate(&self) -> Vec3 {
+        Vec3::random_unit_vector()
     }
 }

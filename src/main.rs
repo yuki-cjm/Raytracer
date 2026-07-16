@@ -85,10 +85,11 @@ fn main() {
     )));
 
     // Box 1
+    let aluminum = Arc::new(Metal::new(&Color::new(0.8, 0.85, 0.88), 0.0));
     let box1 = box_shape(
         &Point3::new(0.0, 0.0, 0.0),
         &Point3::new(165.0, 330.0, 165.0),
-        white.clone(),
+        aluminum,
     );
     let box1 = Arc::new(RotateY::new(box1, 15.0));
     let box1 = Arc::new(Translate::new(box1, &Vec3::new(265.0, 0.0, 295.0)));
@@ -116,7 +117,7 @@ fn main() {
     let cam = Camera::new(
         1.0,
         600,
-        10,
+        1000,
         50,
         &Color::new(0.0, 0.0, 0.0),
         40.0,
