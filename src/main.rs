@@ -84,26 +84,23 @@ fn main() {
         white.clone(),
     )));
 
-    // Box 1
-    let aluminum = Arc::new(Metal::new(&Color::new(0.8, 0.85, 0.88), 0.0));
+    // Box
     let box1 = box_shape(
         &Point3::new(0.0, 0.0, 0.0),
         &Point3::new(165.0, 330.0, 165.0),
-        aluminum,
+        white.clone(),
     );
     let box1 = Arc::new(RotateY::new(box1, 15.0));
     let box1 = Arc::new(Translate::new(box1, &Vec3::new(265.0, 0.0, 295.0)));
     world.add(box1);
 
-    // Box 2
-    let box2 = box_shape(
-        &Point3::new(0.0, 0.0, 0.0),
-        &Point3::new(165.0, 165.0, 165.0),
-        white,
-    );
-    let box2 = Arc::new(RotateY::new(box2, -18.0));
-    let box2 = Arc::new(Translate::new(box2, &Vec3::new(130.0, 0.0, 65.0)));
-    world.add(box2);
+    // Glass Sphere
+    let glass = Arc::new(Dielectric::new(1.5));
+    world.add(Arc::new(Sphere::new_stationary(
+        &Point3::new(190.0, 90.0, 190.0),
+        90.0,
+        glass,
+    )));
 
     // Light Sources
     let empty_material = Arc::new(EmptyMaterial);

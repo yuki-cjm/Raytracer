@@ -4,8 +4,9 @@ use crate::aabb::Aabb;
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::Material;
+use crate::onb::Onb;
 use crate::ray::Ray;
-use crate::rtweekend::PI;
+use crate::rtweekend::{INFINITY, PI, random_double};
 use crate::vec3::{Point3, Vec3};
 
 pub struct Sphere {
@@ -51,6 +52,32 @@ impl Hittable for Sphere {
 
     fn bounding_box(&self) -> Aabb {
         self.bbox
+    }
+
+    fn pdf_value(&self, origin: &Point3, direction: &Vec3) -> f64 {
+        // This method only works for stationary spheres.
+
+        let mut rec = HitRecord::default();
+        if !self.hit(
+            &Ray::new(origin, direction, 0.0),
+            &mut Interval::new(0.001, INFINITY),
+            &mut rec,
+        ) {
+            return 0.0;
+        }
+
+        let dist_squared = (self.center.at(0.0) - *origin).length_squared();
+        let cos_theta_max = (1.0 - self.radius * self.radius / dist_squared).sqrt();
+        let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
+
+        1.0 / solid_angle
+    }
+
+    fn random(&self, origin: &Point3) -> Vec3 {
+        let direction = self.center.at(0.0) - *origin;
+        let distance_squard = direction.length_squared();
+        let uvw = Onb::new(&direction);
+        uvw.transform(&Self::random_to_sphere(self.radius, distance_squard))
     }
 }
 
@@ -99,5 +126,17 @@ impl Sphere {
 
         *u = phi / (2.0 * PI);
         *v = theta / PI;
+    }
+
+    fn random_to_sphere(radius: f64, distance_squard: f64) -> Vec3 {
+        let r1 = random_double();
+        let r2 = random_double();
+        let z = 1.0 + r2 * ((1.0 - radius * radius / distance_squard).sqrt() - 1.0);
+
+        let phi = 2.0 * PI * r1;
+        let x = phi.cos() * (1.0 - z * z).sqrt();
+        let y = phi.sin() * (1.0 - z * z).sqrt();
+
+        Vec3::new(x, y, z)
     }
 }
