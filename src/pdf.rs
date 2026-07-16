@@ -1,6 +1,8 @@
+use std::sync::Arc;
+
 use crate::hittable::Hittable;
 use crate::onb::Onb;
-use crate::rtweekend::PI;
+use crate::rtweekend::{PI, random_double};
 use crate::vec3::{Point3, Vec3, dot};
 
 pub trait Pdf: Send + Sync {
@@ -52,5 +54,29 @@ impl Pdf for HittablePdf<'_> {
 
     fn generate(&self) -> Vec3 {
         self.objects.random(&self.origin)
+    }
+}
+
+pub struct MixturePdf<'a> {
+    p: [Arc<dyn Pdf + 'a>; 2],
+}
+
+impl<'a> MixturePdf<'a> {
+    pub fn new(p0: Arc<dyn Pdf + 'a>, p1: Arc<dyn Pdf + 'a>) -> Self {
+        Self { p: [p0, p1] }
+    }
+}
+
+impl Pdf for MixturePdf<'_> {
+    fn value(&self, direction: &Vec3) -> f64 {
+        0.5 * self.p[0].value(direction) + 0.5 * self.p[1].value(direction)
+    }
+
+    fn generate(&self) -> Vec3 {
+        if random_double() < 0.5 {
+            self.p[0].generate()
+        } else {
+            self.p[1].generate()
+        }
     }
 }

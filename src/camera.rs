@@ -1,17 +1,18 @@
-use crate::color::{Color, get_color};
-use crate::hittable::{HitRecord, Hittable};
-use crate::interval::Interval;
-#[allow(unused_imports)]
-use crate::pdf::{CosinePdf, HittablePdf, Pdf};
-use crate::ray::Ray;
-#[allow(unused_imports)]
-use crate::rtweekend::{INFINITY, PI, degrees_to_radians, random_double, random_range};
-use crate::vec3::{Point3, Vec3, cross};
-
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use rayon::prelude::*;
+use std::sync::Arc;
+
+use crate::color::{Color, get_color};
+use crate::hittable::{HitRecord, Hittable};
+use crate::interval::Interval;
+#[allow(unused_imports)]
+use crate::pdf::{CosinePdf, HittablePdf, MixturePdf, Pdf};
+use crate::ray::Ray;
+#[allow(unused_imports)]
+use crate::rtweekend::{INFINITY, PI, degrees_to_radians, random_double, random_range};
+use crate::vec3::{Point3, Vec3, cross};
 
 #[allow(dead_code)]
 pub struct Camera {
@@ -255,9 +256,12 @@ impl Camera {
             return color_from_emission;
         }
 
-        let light_pdf = HittablePdf::new(lights, &rec.p);
-        scattered = Ray::new(&rec.p, &light_pdf.generate(), r.time);
-        pdf_value = light_pdf.value(&scattered.dir);
+        let p0 = Arc::new(HittablePdf::new(lights, &rec.p));
+        let p1 = Arc::new(CosinePdf::new(&rec.normal));
+        let mixed_pdf = MixturePdf::new(p0, p1);
+
+        scattered = Ray::new(&rec.p, &mixed_pdf.generate(), r.time);
+        pdf_value = mixed_pdf.value(&scattered.dir);
 
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
 
