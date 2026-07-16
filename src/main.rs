@@ -104,12 +104,18 @@ fn main() {
 
     // Light Sources
     let empty_material = Arc::new(EmptyMaterial);
-    let lights = Quad::new(
+    let mut lights = HittableList::new();
+    lights.add(Arc::new(Quad::new(
         &Point3::new(343.0, 554.0, 332.0),
         &Vec3::new(-130.0, 0.0, 0.0),
         &Vec3::new(0.0, 0.0, -105.0),
-        empty_material,
-    );
+        empty_material.clone(),
+    )));
+    lights.add(Arc::new(Sphere::new_stationary(
+        &Point3::new(190.0, 90.0, 190.0),
+        90.0,
+        empty_material.clone(),
+    )));
 
     let cam = Camera::new(
         1.0,
