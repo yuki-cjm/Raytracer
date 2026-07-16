@@ -12,9 +12,20 @@ pub fn linear_to_gamma(linear_component: f64) -> f64 {
 }
 
 pub fn get_color(pixel_color: &Color) -> [u8; 3] {
-    let r = pixel_color.x;
-    let g = pixel_color.y;
-    let b = pixel_color.z;
+    let mut r = pixel_color.x;
+    let mut g = pixel_color.y;
+    let mut b = pixel_color.z;
+
+    // Replace NaN components with zero.
+    if r.is_nan() {
+        r = 0.0;
+    }
+    if g.is_nan() {
+        g = 0.0;
+    }
+    if b.is_nan() {
+        b = 0.0;
+    }
 
     // Apply a linear to gamma transform for gamma 2
     let r = linear_to_gamma(r);
