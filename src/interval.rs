@@ -8,7 +8,6 @@ pub struct Interval {
     pub max: f64,
 }
 
-#[allow(dead_code)]
 impl Interval {
     // Default interval is empty
     pub fn default() -> Interval {

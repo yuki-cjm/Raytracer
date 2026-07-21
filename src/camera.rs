@@ -8,11 +8,9 @@ use crate::color::{Color, get_color};
 use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::ScatterRecord;
-#[allow(unused_imports)]
-use crate::pdf::{CosinePdf, HittablePdf, MixturePdf, Pdf};
+use crate::pdf::{HittablePdf, MixturePdf, Pdf};
 use crate::ray::Ray;
-#[allow(unused_imports)]
-use crate::rtweekend::{INFINITY, PI, degrees_to_radians, random_double, random_range};
+use crate::rtweekend::{INFINITY, degrees_to_radians, random_double};
 use crate::vec3::{Point3, Vec3, cross};
 
 #[allow(dead_code)]
@@ -136,7 +134,7 @@ impl Camera {
 
     pub fn render(&self, world: &(dyn Hittable + Sync), lights: &(dyn Hittable + Sync)) {
         // output
-        let path = std::path::Path::new("output/book3/image.jpg");
+        let path = std::path::Path::new("output/works/image.jpg");
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 

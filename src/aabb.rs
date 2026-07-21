@@ -11,7 +11,6 @@ pub struct Aabb {
     pub z: Interval,
 }
 
-#[allow(dead_code)]
 impl Aabb {
     pub fn default() -> Self {
         Self {

@@ -193,7 +193,6 @@ impl Isotropic {
         }
     }
 
-    #[allow(dead_code)]
     pub fn new(tex: Arc<dyn Texture>) -> Self {
         Self { tex }
     }

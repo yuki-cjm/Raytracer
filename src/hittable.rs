@@ -104,6 +104,7 @@ pub struct RotateY {
     bbox: Aabb,
 }
 
+#[allow(dead_code)]
 impl RotateY {
     pub fn new(object: Arc<dyn Hittable>, angle: f64) -> Self {
         let radians = degrees_to_radians(angle);
@@ -185,6 +186,57 @@ impl Hittable for RotateY {
             rec.normal.y,
             -sin_theta * rec.normal.x + cos_theta * rec.normal.z,
         );
+
+        true
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox
+    }
+}
+
+pub struct Scale {
+    object: Arc<dyn Hittable>,
+    scale: f64,
+    bbox: Aabb,
+}
+
+impl Scale {
+    pub fn new(object: Arc<dyn Hittable>, scale: f64) -> Self {
+        let bbox = object.bounding_box();
+        let min = Point3::new(bbox.x.min * scale, bbox.y.min * scale, bbox.z.min * scale);
+        let max = Point3::new(bbox.x.max * scale, bbox.y.max * scale, bbox.z.max * scale);
+        let bbox = Aabb::new_from_points(&min, &max);
+        Self {
+            object,
+            scale,
+            bbox,
+        }
+    }
+}
+
+impl Hittable for Scale {
+    fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
+        let inv_scale = 1.0 / self.scale;
+
+        // Transform the ray to object space (where the object is unscaled)
+        let scaled_r = Ray::new(&(r.orig * inv_scale), &r.dir, r.time);
+
+        // Also scale ray_t to object space
+        let mut scaled_ray_t = *ray_t;
+        scaled_ray_t.min *= inv_scale;
+        scaled_ray_t.max *= inv_scale;
+
+        if !self.object.hit(&scaled_r, &mut scaled_ray_t, rec) {
+            return false;
+        }
+
+        // Transform intersection back to world space
+        rec.p *= self.scale;
+        rec.t *= self.scale;
+
+        // Normal direction is unchanged for uniform scale
+        rec.normal = rec.normal.unit_vector();
 
         true
     }

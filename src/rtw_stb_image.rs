@@ -40,6 +40,8 @@ impl RtwImage {
         // floating-point values for the first pixel (red, then green, then blue). Pixels are
         // contiguous, going left to right for the width of the image, followed by the next row
         // below, for the full height of the image.
+        // RGBA images are composited against a white background so transparent areas don't
+        // become black.
 
         let dyn_img = match image::ImageReader::open(filename) {
             Ok(reader) => match reader.decode() {
@@ -49,8 +51,30 @@ impl RtwImage {
             Err(_) => return false,
         };
 
-        // Convert to a linear floating-point RGB image (channel order R, G, B, pixels contiguous)
-        let rgb32f: Rgb32FImage = dyn_img.to_rgb32f();
+        let rgb32f: Rgb32FImage = if dyn_img.color().has_alpha() {
+            // Composite RGBA against white: result = src_rgb * alpha + white * (1 - alpha)
+            let rgba = dyn_img.to_rgba32f();
+            let (w, h) = rgba.dimensions();
+            let mut rgb = Rgb32FImage::new(w, h);
+            for y in 0..h {
+                for x in 0..w {
+                    let px = rgba.get_pixel(x, y);
+                    let a = px.0[3];
+                    rgb.put_pixel(
+                        x,
+                        y,
+                        image::Rgb([
+                            px.0[0] * a + 1.0 - a,
+                            px.0[1] * a + 1.0 - a,
+                            px.0[2] * a + 1.0 - a,
+                        ]),
+                    );
+                }
+            }
+            rgb
+        } else {
+            dyn_img.to_rgb32f()
+        };
 
         let (width, height) = rgb32f.dimensions();
         self.image_width = width as i32;

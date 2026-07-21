@@ -124,6 +124,7 @@ impl Hittable for Quad {
     }
 }
 
+#[allow(dead_code)]
 pub fn box_shape(a: &Point3, b: &Point3, mat: Arc<dyn Material>) -> Arc<HittableList> {
     // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
 
