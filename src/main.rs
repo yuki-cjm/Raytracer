@@ -16,6 +16,7 @@ mod ray;
 mod rtw_stb_image;
 mod rtweekend;
 mod sphere;
+mod star;
 mod texture;
 mod triangle;
 mod vec3;
@@ -25,7 +26,7 @@ use std::sync::Arc;
 
 use crate::camera::Camera;
 use crate::color::Color;
-use crate::hittable::{Hittable, RotateY, Scale, Translate};
+use crate::hittable::{Hittable, Scale, Translate};
 use crate::hittable_list::HittableList;
 use crate::material::{DiffuseLight, EmptyMaterial, Lambertian, Material};
 use crate::quad::Quad;
@@ -34,61 +35,69 @@ use crate::vec3::{Point3, Vec3};
 
 fn main() {
     let mut world = HittableList::new();
-
-    // Build material map: all materials use the single texture
-    let mut mat_map: HashMap<String, Arc<dyn Material>> = HashMap::new();
-
-    let tex = Arc::new(Lambertian::new(Arc::new(ImageTexture::new(
-        "textures/茜特菈琳.png",
-    ))));
-
-    for name in &["Citlali_Ghost01", "Citlali_Ghost02", "Citlali_Ghost03"] {
-        mat_map.insert(name.to_string(), tex.clone());
-    }
-
-    let model = obj_loader::load_obj("models/茜特拉琳.obj", &mat_map);
-
-    // Rotate 90° around Y, then scale and place centered
-    let model = Arc::new(RotateY::new(Arc::new(model), 180.0));
-    let model = Arc::new(Scale::new(model, 200.0));
-    let model = Arc::new(Translate::new(model, &Vec3::new(278.0, 0.0, 278.0)));
-    world.add(model);
-
-    let bbox = world.bounding_box();
-    eprintln!(
-        "World bbox: x=[{:.2}, {:.2}], y=[{:.2}, {:.2}], z=[{:.2}, {:.2}]",
-        bbox.x.min, bbox.x.max, bbox.y.min, bbox.y.max, bbox.z.min, bbox.z.max
-    );
-
-    let light_material = Arc::new(DiffuseLight::from_color(&Color::new(15.0, 15.0, 15.0)));
-    world.add(Arc::new(Quad::new(
-        &Point3::new(200.0, 554.0, 200.0),
-        &Vec3::new(150.0, 0.0, 0.0),
-        &Vec3::new(0.0, 0.0, 150.0),
-        light_material.clone(),
-    )));
-
-    let empty_material = Arc::new(EmptyMaterial);
     let mut lights = HittableList::new();
-    lights.add(Arc::new(Quad::new(
-        &Point3::new(200.0, 554.0, 200.0),
-        &Vec3::new(150.0, 0.0, 0.0),
-        &Vec3::new(0.0, 0.0, 150.0),
-        empty_material.clone(),
+
+    // ---- Ground: light blue ----
+    let ground_mat: Arc<dyn Material> =
+        Arc::new(Lambertian::from_color(&Color::new(0.35, 0.55, 0.7)));
+    world.add(Arc::new(Quad::new(
+        &Point3::new(-3.0, 0.0, 3.0),
+        &Vec3::new(6.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -6.0),
+        ground_mat,
     )));
 
+    // ---- Invisible overhead light (above camera frame) ----
+    let light_mat = Arc::new(DiffuseLight::from_color(&Color::new(7.0, 6.5, 8.0)));
+    // Small quad high above the flower, out of camera view
+    world.add(Arc::new(Quad::new(
+        &Point3::new(-0.5, 3.0, 0.3),
+        &Vec3::new(1.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -0.6),
+        light_mat,
+    )));
+
+    let empty_mat = Arc::new(EmptyMaterial);
+    lights.add(Arc::new(Quad::new(
+        &Point3::new(-0.5, 3.0, 0.3),
+        &Vec3::new(1.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -0.6),
+        empty_mat,
+    )));
+
+    // ---- Flower material with diffuse texture ----
+    let flower_tex = Arc::new(ImageTexture::new(
+        "Property_Prop_KhaenriahFlower_01_Diffuse.png",
+    ));
+    let flower_mat: Arc<dyn Material> = Arc::new(Lambertian::new(flower_tex));
+
+    let mut mat_map: HashMap<String, Arc<dyn Material>> = HashMap::new();
+    mat_map.insert("Property_Prop_KhaenriahFlower_01".to_string(), flower_mat);
+
+    // ---- Load single flower ----
+    let flower = obj_loader::load_obj("models/未有之梦.obj", &mat_map);
+    let fb = flower.bounding_box();
+    let flower = Arc::new(Scale::new(Arc::new(flower), 3.0));
+    let lift = -fb.y.min * 3.0;
+    let flower = Arc::new(Translate::new(flower, &Vec3::new(0.0, lift, 0.0)));
+    world.add(flower);
+
+    // ---- Camera ----
+    let lookfrom = Point3::new(0.0, 1.5, 2.0);
+    let lookat = Point3::new(0.0, 0.3, 0.0);
+    let focus_dist = (lookfrom - lookat).length();
     let cam = Camera::new(
         1.0,
         1200,
+        100,
         50,
-        50,
-        &Color::new(0.7, 0.8, 1.0),
-        28.0,
-        &Point3::new(278.0, 120.0, -180.0),
-        &Point3::new(278.0, 100.0, 278.0),
+        &Color::new(0.3, 0.3, 0.5),
+        40.0,
+        &lookfrom,
+        &lookat,
         &Vec3::new(0.0, 1.0, 0.0),
         0.0,
-        10.0,
+        focus_dist,
     );
 
     cam.render(&world, &lights);

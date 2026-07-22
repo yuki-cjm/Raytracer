@@ -201,6 +201,7 @@ pub struct Scale {
     bbox: Aabb,
 }
 
+#[allow(dead_code)]
 impl Scale {
     pub fn new(object: Arc<dyn Hittable>, scale: f64) -> Self {
         let bbox = object.bounding_box();
