@@ -246,3 +246,98 @@ impl Hittable for Scale {
         self.bbox
     }
 }
+
+pub struct RotateZ {
+    object: Arc<dyn Hittable>,
+    sin_theta: f64,
+    cos_theta: f64,
+    bbox: Aabb,
+}
+
+#[allow(dead_code)]
+impl RotateZ {
+    pub fn new(object: Arc<dyn Hittable>, angle: f64) -> Self {
+        let radians = degrees_to_radians(angle);
+        let sin_theta = radians.sin();
+        let cos_theta = radians.cos();
+        let bbox = object.bounding_box();
+
+        let mut min = Point3::new(INFINITY, INFINITY, INFINITY);
+        let mut max = Point3::new(-INFINITY, -INFINITY, -INFINITY);
+
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let x = i as f64 * bbox.x.max + (1.0 - i as f64) * bbox.x.min;
+                    let y = j as f64 * bbox.y.max + (1.0 - j as f64) * bbox.y.min;
+                    let z = k as f64 * bbox.z.max + (1.0 - k as f64) * bbox.z.min;
+
+                    // Rotation around Z: x' = x·cosθ - y·sinθ, y' = x·sinθ + y·cosθ
+                    let newx = cos_theta * x - sin_theta * y;
+                    let newy = sin_theta * x + cos_theta * y;
+
+                    let tester = Vec3::new(newx, newy, z);
+
+                    min.x = f64::min(min.x, tester.x);
+                    max.x = f64::max(max.x, tester.x);
+                    min.y = f64::min(min.y, tester.y);
+                    max.y = f64::max(max.y, tester.y);
+                    min.z = f64::min(min.z, tester.z);
+                    max.z = f64::max(max.z, tester.z);
+                }
+            }
+        }
+
+        Self {
+            object,
+            sin_theta,
+            cos_theta,
+            bbox: Aabb::new_from_points(&min, &max),
+        }
+    }
+}
+
+impl Hittable for RotateZ {
+    fn hit(&self, r: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
+        let cos_theta = self.cos_theta;
+        let sin_theta = self.sin_theta;
+
+        // Transform the ray from world space to object space (inverse rotation).
+        let origin = Vec3::new(
+            cos_theta * r.orig.x + sin_theta * r.orig.y,
+            -sin_theta * r.orig.x + cos_theta * r.orig.y,
+            r.orig.z,
+        );
+
+        let direction = Vec3::new(
+            cos_theta * r.dir.x + sin_theta * r.dir.y,
+            -sin_theta * r.dir.x + cos_theta * r.dir.y,
+            r.dir.z,
+        );
+
+        let rotated_r = Ray::new(&origin, &direction, r.time);
+
+        if !self.object.hit(&rotated_r, ray_t, rec) {
+            return false;
+        }
+
+        // Transform intersection back to world space.
+        rec.p = Point3::new(
+            cos_theta * rec.p.x - sin_theta * rec.p.y,
+            sin_theta * rec.p.x + cos_theta * rec.p.y,
+            rec.p.z,
+        );
+
+        rec.normal = Vec3::new(
+            cos_theta * rec.normal.x - sin_theta * rec.normal.y,
+            sin_theta * rec.normal.x + cos_theta * rec.normal.y,
+            rec.normal.z,
+        );
+
+        true
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        self.bbox
+    }
+}

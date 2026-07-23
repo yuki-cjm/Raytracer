@@ -51,11 +51,8 @@ pub struct Lambertian {
 #[allow(dead_code)]
 impl Lambertian {
     pub fn from_color(albedo: &Color) -> Self {
-        Self {
-            tex: Arc::new(SolidColor::new(albedo)),
-        }
+        Self { tex: Arc::new(SolidColor::new(albedo)) }
     }
-
     pub fn new(tex: Arc<dyn Texture>) -> Self {
         Self { tex }
     }

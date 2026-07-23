@@ -259,7 +259,10 @@ impl Camera {
 
         let scattered = Ray::new(&rec.p, &p.generate(), r.time);
         let pdf_value = p.value(&scattered.dir);
-
+        if pdf_value < 1e-6 {
+            let sample_color = self.ray_color(&scattered, depth - 1, world, lights);
+            return color_from_emission + srec.attenuation * sample_color;
+        }
         let scattering_pdf = rec.mat.scattering_pdf(r, &rec, &scattered);
 
         let sample_color = self.ray_color(&scattered, depth - 1, world, lights);

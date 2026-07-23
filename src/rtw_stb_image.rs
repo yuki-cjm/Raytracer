@@ -23,18 +23,24 @@ impl RtwImage {
     }
 
     pub fn new(image_filename: &str) -> Self {
-        // Loads image data from the specified file inside the "images/" directory.
-        // If the image was not loaded successfully, width() and height() will return 0.
-
         let mut img = RtwImage::default();
         let path = format!("images/{}", image_filename);
-        if !img.load(&path) {
+        if !img.load(&path, 1.0, 1.0, 1.0) {
             eprintln!("ERROR: Could not load image file '{}'.\n", image_filename);
         }
         img
     }
 
-    pub fn load(&mut self, filename: &str) -> bool {
+    pub fn new_with_bg(image_filename: &str, bg_r: f64, bg_g: f64, bg_b: f64) -> Self {
+        let mut img = RtwImage::default();
+        let path = format!("images/{}", image_filename);
+        if !img.load(&path, bg_r as f32, bg_g as f32, bg_b as f32) {
+            eprintln!("ERROR: Could not load image file '{}'.\n", image_filename);
+        }
+        img
+    }
+
+    pub fn load(&mut self, filename: &str, bg_r: f32, bg_g: f32, bg_b: f32) -> bool {
         // Loads the linear (gamma=1) image data from the given file name. Returns true if the
         // load succeeded. The resulting data buffer contains the three [0.0, 1.0]
         // floating-point values for the first pixel (red, then green, then blue). Pixels are
@@ -52,7 +58,7 @@ impl RtwImage {
         };
 
         let rgb32f: Rgb32FImage = if dyn_img.color().has_alpha() {
-            // Composite RGBA against white: result = src_rgb * alpha + white * (1 - alpha)
+            // Composite RGBA against background color
             let rgba = dyn_img.to_rgba32f();
             let (w, h) = rgba.dimensions();
             let mut rgb = Rgb32FImage::new(w, h);
@@ -64,9 +70,9 @@ impl RtwImage {
                         x,
                         y,
                         image::Rgb([
-                            px.0[0] * a + 1.0 - a,
-                            px.0[1] * a + 1.0 - a,
-                            px.0[2] * a + 1.0 - a,
+                            px.0[0] * a + bg_r * (1.0 - a),
+                            px.0[1] * a + bg_g * (1.0 - a),
+                            px.0[2] * a + bg_b * (1.0 - a),
                         ]),
                     );
                 }

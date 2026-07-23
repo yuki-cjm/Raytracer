@@ -26,6 +26,34 @@ impl Texture for SolidColor {
     }
 }
 
+pub struct BrightTexture {
+    tex: Arc<dyn Texture>,
+    gain: f64,
+    floor: Color,
+}
+
+#[allow(dead_code)]
+impl BrightTexture {
+    pub fn new(tex: Arc<dyn Texture>, gain: f64, floor: &Color) -> Self {
+        Self {
+            tex,
+            gain,
+            floor: *floor,
+        }
+    }
+}
+
+impl Texture for BrightTexture {
+    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
+        let c = self.tex.value(u, v, p) * self.gain;
+        Color::new(
+            c.x.max(self.floor.x),
+            c.y.max(self.floor.y),
+            c.z.max(self.floor.z),
+        )
+    }
+}
+
 pub struct CheckerTexture {
     inv_scale: f64,
     even: Arc<dyn Texture>,
@@ -76,6 +104,12 @@ impl ImageTexture {
     pub fn new(filename: &str) -> Self {
         Self {
             image: RtwImage::new(filename),
+        }
+    }
+
+    pub fn new_with_bg(filename: &str, bg_r: f64, bg_g: f64, bg_b: f64) -> Self {
+        Self {
+            image: RtwImage::new_with_bg(filename, bg_r, bg_g, bg_b),
         }
     }
 }

@@ -153,6 +153,7 @@ impl ops::Add<Vec3> for Aabb {
         }
     }
 }
+
 impl ops::Add<Aabb> for Vec3 {
     type Output = Aabb;
 

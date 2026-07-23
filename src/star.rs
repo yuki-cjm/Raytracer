@@ -17,8 +17,6 @@ pub struct Star {
 
 #[allow(dead_code)]
 impl Star {
-    /// Create a 5-pointed star.
-    /// `outer_r` is the tip radius, `inner_r` is the valley radius (~0.38 * outer_r).
     pub fn new(outer_r: f64, inner_r: f64, mat: Arc<dyn Material>) -> Self {
         let mut tris = HittableList::new();
         let thick = 0.03; // tiny thickness so rays don't miss the flat shape
@@ -32,7 +30,6 @@ impl Star {
             verts.push(Point3::new(inner_r * a.cos(), inner_r * a.sin(), 0.0));
         }
 
-        // Add triangles for front face (+thick) and back face (-thick)
         for i in 0..10 {
             let v1 = &verts[i];
             let v2 = &verts[(i + 1) % 10];
@@ -40,10 +37,6 @@ impl Star {
             let c_f = Point3::new(0.0, 0.0, thick);
             let v1_f = Point3::new(v1.x, v1.y, thick);
             let v2_f = Point3::new(v2.x, v2.y, thick);
-            let c_b = Point3::new(0.0, 0.0, -thick);
-            let v1_b = Point3::new(v1.x, v1.y, -thick);
-            let v2_b = Point3::new(v2.x, v2.y, -thick);
-
             // front (+Z)
             tris.add(Arc::new(Triangle::new(
                 &c_f,
@@ -54,16 +47,7 @@ impl Star {
                 (0.5 + v2.x / (2.0 * outer_r), 0.5 + v2.y / (2.0 * outer_r)),
                 mat.clone(),
             )));
-            // back (-Z), reversed winding
-            tris.add(Arc::new(Triangle::new(
-                &c_b,
-                &v2_b,
-                &v1_b,
-                (0.5, 0.5),
-                (0.5 + v2.x / (2.0 * outer_r), 0.5 + v2.y / (2.0 * outer_r)),
-                (0.5 + v1.x / (2.0 * outer_r), 0.5 + v1.y / (2.0 * outer_r)),
-                mat.clone(),
-            )));
+
         }
 
         Star { triangles: tris }
