@@ -134,7 +134,7 @@ impl Camera {
 
     pub fn render(&self, world: &(dyn Hittable + Sync), lights: &(dyn Hittable + Sync)) {
         // output
-        let path = std::path::Path::new("output/works/image.jpg");
+        let path = std::path::Path::new("output/works/image.png");
         let prefix = path.parent().unwrap();
         std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 

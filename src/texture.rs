@@ -138,6 +138,29 @@ impl Texture for ImageTexture {
     }
 }
 
+// ============================================================
+// FlipTexture: wraps a texture with optional UV flips
+// ============================================================
+pub struct FlipTexture {
+    tex: Arc<dyn Texture>,
+    flip_u: bool,
+    flip_v: bool,
+}
+
+impl FlipTexture {
+    pub fn new(tex: Arc<dyn Texture>, flip_u: bool, flip_v: bool) -> Self {
+        Self { tex, flip_u, flip_v }
+    }
+}
+
+impl Texture for FlipTexture {
+    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
+        let uu = if self.flip_u { 1.0 - u } else { u };
+        let vv = if self.flip_v { 1.0 - v } else { v };
+        self.tex.value(uu, vv, p)
+    }
+}
+
 pub struct NoiseTexture {
     noise: Perlin,
     scale: f64,

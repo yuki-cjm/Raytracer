@@ -33,7 +33,6 @@ impl Disk {
         uv_r: f64,
     ) -> Self {
         let mut tris = HittableList::new();
-        let thick = 0.02;
 
         for i in 0..segments {
             let a0 = (i as f64) * 2.0 * std::f64::consts::PI / (segments as f64);
@@ -46,30 +45,14 @@ impl Disk {
             let uv2 = (uv_cx + uv_r * a1.cos(), uv_cy + uv_r * a1.sin());
             let uv_c = (uv_cx, uv_cy);
 
-            // front face (+Z)
-            let cf = Point3::new(0.0, 0.0, thick);
-            let v1f = Point3::new(v1.x, v1.y, thick);
-            let v2f = Point3::new(v2.x, v2.y, thick);
+            let c = Point3::new(0.0, 0.0, 0.0);
             tris.add(Arc::new(Triangle::new(
-                &cf,
-                &v1f,
-                &v2f,
+                &c,
+                &v1,
+                &v2,
                 uv_c,
                 uv1,
                 uv2,
-                mat.clone(),
-            )));
-
-            let cb = Point3::new(0.0, 0.0, -thick);
-            let v1b = Point3::new(v1.x, v1.y, -thick);
-            let v2b = Point3::new(v2.x, v2.y, -thick);
-            tris.add(Arc::new(Triangle::new(
-                &cb,
-                &v2b,
-                &v1b,
-                uv_c,
-                uv2,
-                uv1,
                 mat.clone(),
             )));
         }
